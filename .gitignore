@@ -1,2 +1,3 @@
 *.gnet
 shared/algorithms/node_configs.json
+shared/logs/*
