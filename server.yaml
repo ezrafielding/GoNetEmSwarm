@@ -1,0 +1,44 @@
+# gonetem-server configuration for GonetemSwarm.
+
+listen: "localhost:10110"
+tls:
+  enabled: false
+  ca: ""
+  cert: ""
+  key: ""
+workdir: /tmp
+
+docker:
+  # Built-in node images — left untagged so gonetem appends :0.6.0 automatically
+  # (matching the locally-built images).  Override only if you upgrade gonetem.
+  nodes:
+    router:
+      image: mroy31/gonetem-frr
+    host:
+      image: mroy31/gonetem-host
+    server:
+      image: mroy31/gonetem-server
+
+  # Custom node type used by GonetemSwarm topologies (docker.satellite).
+  # Identical behaviour to docker.router (FRR + vtysh) but uses the
+  # gonetem-satellite image which adds Python 3, NumPy, Matplotlib, netifaces.
+  # Build with: ./build_image.sh
+  extraNodes:
+  - type: satellite
+    image: gonetem-satellite:latest
+    options:
+      log: false
+      tso: true
+    commands:
+      console: /usr/bin/vtysh
+      shell: /bin/bash
+      loadConfig:
+      - command: /usr/lib/frr/frrinit.sh start
+        checkFiles: []
+      saveConfig:
+      - command: vtysh -w
+        checkFiles: []
+    configurationFiles:
+    - destSuffix: frr.conf
+      source: /etc/frr/frr.conf
+      label: FRR
