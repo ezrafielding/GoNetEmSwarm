@@ -17,8 +17,8 @@ sudo bash startserveur.sh
 ```
 Your terminal will now be busy with GoNetEm server.
 So you need to start another one to use the console to monitor GoNetEm.
-## Right now, I am using a static address plan that assume a strongly connected topology
-## Also, for static address attribution to work properlys, please ensur that .gnet project look like this :
+## Right now, I am using a static address plan that assume a strongly connected topology.
+## Also, for static address attribution to work properlys, please ensure that .gnet project look like this :
 ```yaml
 nodes:
   sat1:
