@@ -1,5 +1,6 @@
 # Compatibility tool for using ConSwarm with GoNetEm
 to use this 3 steps are required :
+
 1 - Build docker image of a test satellite (satestellite) with 
 ```bash
 sudo bash buildimage.sh
