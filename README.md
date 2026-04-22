@@ -4,14 +4,18 @@ to use this 3 steps are required :
 ```bash
 sudo bash buildimage.sh
 ```
-1 - Configure and start GoNetEm serveur :
+1 (bis) - Or pull the container image from my docker hub :
+```bash
+sudo docker pull tivadarofthorns/satestellite:0.4.0
+```
+2 - Configure and start GoNetEm serveur :
 Verifie that config.yaml exist and contains precedent image declaration(look like this):
 ```yaml
   extraNodes:
   - type: satellite
     image: tivadarofthorns/satestellite:0.4.0
 ```
-Then start serveur with 
+3 - Then start serveur with 
 ```bash
 sudo bash startserveur.sh
 ```
