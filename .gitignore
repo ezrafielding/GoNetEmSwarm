@@ -1,3 +1,18 @@
+# Generated topology files
 *.gnet
+
+# Generated node addressing config
 shared/algorithms/node_configs.json
+
+# Algorithm output — keep the directory, ignore contents
 shared/logs/*
+!shared/logs/.gitkeep
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+
+# Editor / OS noise
+.DS_Store
+*.swp
+*.swo
