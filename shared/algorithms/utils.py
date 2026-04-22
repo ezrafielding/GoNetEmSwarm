@@ -4,12 +4,13 @@ GonetemSwarm shared utilities.
 Classes
 -------
 Transceiver
-    Multicast TX/RX base class. Subclass and override on_message() to handle
-    incoming datagrams. Manages a background RX thread and lifecycle.
+    Unicast-to-all TX/RX base class. Subclass and override on_message() to
+    handle incoming datagrams. Manages a background RX thread and lifecycle.
 
 Catalog(Transceiver)
     CRDT-based distributed key-value catalog. Each entry is an op-based
-    Last-Write-Wins Register; assigns are broadcast to the swarm via multicast.
+    Last-Write-Wins Register; assigns are broadcast to the swarm via
+    unicast-to-all.
 
 Typical import in an algorithm file:
 
@@ -19,7 +20,6 @@ Typical import in an algorithm file:
 import json
 import os
 import socket
-import struct
 import threading
 
 
@@ -28,9 +28,10 @@ import threading
 # ===========================================================================
 
 class Transceiver:
-    """Multicast transceiver base class.
+    """Unicast-to-all transceiver base class.
 
     Subclass and override on_message() to react to incoming datagrams.
+    tx() sends a UDP datagram to every other node's loopback IP individually.
 
     Usage:
 
@@ -51,9 +52,9 @@ class Transceiver:
         algo.stop()
 
     node_configs.json keys used:
-        loopback_ip     — TX source address (kernel RPF check)
-        multicast_group — e.g. "239.0.1.1"
-        multicast_port  — e.g. 5007
+        loopback_ip    — this node's stable identity address; RX binds here
+        multicast_port — UDP port used for all node-to-node traffic
+        (all other nodes' loopback_ip values are read for TX)
     """
 
     _RX_TIMEOUT = 1.0   # recvfrom block duration; also caps stop() wait time
@@ -65,8 +66,14 @@ class Transceiver:
         info = all_nodes[self.node_name]
 
         self.loopback_ip: str = info["loopback_ip"]
-        self.mcast_group: str = info["multicast_group"]
-        self.mcast_port:  int = info["multicast_port"]
+        self.port:        int = info["multicast_port"]
+
+        # Loopback IPs of every other node — used by tx()
+        self._peers: dict[str, str] = {
+            name: node["loopback_ip"]
+            for name, node in all_nodes.items()
+            if name != self.node_name
+        }
 
         self._stop_event = threading.Event()
         self._rx_thread: threading.Thread | None = None
@@ -77,13 +84,11 @@ class Transceiver:
     # ------------------------------------------------------------------
 
     def tx(self, data: bytes) -> None:
-        """Send *data* to the multicast group."""
+        """Send *data* to every other node via unicast."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            sock.bind((self.loopback_ip, 0))
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 32)
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
-            sock.sendto(data, (self.mcast_group, self.mcast_port))
+            for ip in self._peers.values():
+                sock.sendto(data, (ip, self.port))
         finally:
             sock.close()
 
@@ -92,7 +97,7 @@ class Transceiver:
     # ------------------------------------------------------------------
 
     def on_message(self, data: bytes, addr: tuple) -> None:
-        """Called for every multicast datagram received.
+        """Called for every datagram received.
 
         Args:
             data: Raw bytes of the received datagram.
@@ -104,7 +109,7 @@ class Transceiver:
     # ------------------------------------------------------------------
 
     def start(self) -> None:
-        """Open the multicast socket and start the background RX thread."""
+        """Open the RX socket and start the background RX thread."""
         if self._rx_thread is not None and self._rx_thread.is_alive():
             return
         self._stop_event.clear()
@@ -141,9 +146,7 @@ class Transceiver:
     def _create_rx_socket(self) -> socket.socket:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(("", self.mcast_port))
-        mreq = struct.pack("4sL", socket.inet_aton(self.mcast_group), socket.INADDR_ANY)
-        sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        sock.bind((self.loopback_ip, self.port))
         sock.settimeout(self._RX_TIMEOUT)
         return sock
 
@@ -180,7 +183,7 @@ class Catalog(Transceiver):
                    atSource   → t' = t + 1   (per-item integer counter)
                    downstream(x', t') → if t < t' then x, t := x', t'
 
-    Downstream ops are broadcast to the swarm via multicast (Transceiver).
+    Downstream ops are broadcast to the swarm via unicast-to-all (Transceiver).
 
     Usage:
 
