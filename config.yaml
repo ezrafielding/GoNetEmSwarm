@@ -1,0 +1,21 @@
+listen: "localhost:10110"
+tls:
+  enabled: false
+  ca: ""
+  cert: ""
+  key: ""
+workdir: /tmp
+docker:
+  nodes:
+    router:
+      image: mroy31/gonetem-frr
+    host:
+      image: mroy31/gonetem-host
+    server:
+      image: mroy31/gonetem-server
+    p4sw:
+      image: mroy31/gonetem-bmv2
+  extraNodes:
+  - type: satellite
+    image: tivadarofthorns/satestellite:0.4.0
+
