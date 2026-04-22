@@ -32,8 +32,8 @@ links:
     peer2: sat2.1
   - peer1: sat1.3
     peer2: sat3.1
-  - peer1: sat2.2
-    peer2: sat3.3
+  - peer1: sat2.3
+    peer2: sat3.2
 ```
 It is important that each network interface bear the number of the satellite it is linked to.
 *I probably need to find a way for it to be more robust, maybe osbf routing can resolve this issue*
