@@ -7,6 +7,7 @@ shared/algorithms/node_configs.json
 # Algorithm output — keep the directory, ignore contents
 shared/logs/*
 !shared/logs/.gitkeep
+!shared/logs/network/.gitkeep
 
 # Python artifacts
 __pycache__/
