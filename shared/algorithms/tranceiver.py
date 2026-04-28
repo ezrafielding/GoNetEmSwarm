@@ -62,7 +62,7 @@ class Transceiver:
         self.neigh_to_check = []
         self.msg_counter = 0
         self.path_to_logs_debug = "/logs/network/trans_"+self.node_name+".log"
-        self.path_to_journal = "/logs/network/journal_"+self.node_name+".log"
+        self.path_to_journal = "/logs/journal_"+self.node_name+".log"
         self.write_log_debug("Tranceiver started with lo ip : "+ self.loopback_ip)
         for neig in info["neighbors"] :
             self.neighbors_addr_list.append([neig["loopback_ip"], neig["link_ip"]])
@@ -80,8 +80,11 @@ class Transceiver:
         with open(self.path_to_logs_debug, 'a') as log_file:
             log_file.write('\n'+log_message)
 
+    def get_local_time(self):
+        return time.process_time()
+
     def add_rcv_journal(self, message, addr):
-        journal_entry = formatted(time.process_time()) +\
+        journal_entry = formatted(self.get_local_time()) +\
                         formatted("RCV") +\
                         formatted(addr) +\
                         formatted(message["type"]) +\
@@ -92,14 +95,14 @@ class Transceiver:
             journal.write('\n'+journal_entry[:-2])
 
     def add_snt_journal(self, message, addr):
-        journal_entry = formatted(time.process_time()) +\
+        journal_entry = formatted(self.get_local_time()) +\
                         formatted("SNT") +\
                         formatted(addr) +\
                         formatted(message["type"]) +\
                         formatted(message["sender"]) +\
                         formatted(message["counter"]) +\
                         formatted(message["payload"])
-        self.write_log_debug(str(time.process_time()))
+        self.write_log_debug(str(self.get_local_time()))
         with open(self.path_to_journal, 'a') as journal:
             journal.write('\n'+journal_entry[:-2])
 
@@ -202,8 +205,8 @@ class Transceiver:
                     self.historic_transmission[message["sender"]] = [message["counter"]]
                 self.transmit(message, addr[0])
 
-            case 2:
-                self.write_log_debug("Message instance received : OSPF Broadcast")
+            # case 2:
+            #     self.write_log_debug("Message instance received : OSPF Broadcast")
             case 6:
                 addr_sender = message["sender"]
                 self.write_log_debug("Message instance received : Heartbeat from : " + addr_sender)
