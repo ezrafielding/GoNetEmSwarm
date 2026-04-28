@@ -10,10 +10,12 @@ import socket
 import struct
 import threading
 import traceback
-
+import time
 # ===========================================================================
 # Transceiver
 # ===========================================================================
+def formatted(value):
+    return " "+str(value)+" |"
 
 class Transceiver:
     """Multicast transceiver base class.
@@ -40,8 +42,6 @@ class Transceiver:
 
     node_configs.json keys used:
         loopback_ip     — TX source address (kernel RPF check)
-        multicast_group — e.g. "239.0.1.1"
-        multicast_port  — e.g. 5007
         neighbors       — list of neighbors, unkown in top level, only for emulating bcast
     """
 
@@ -53,18 +53,21 @@ class Transceiver:
         self.node_name: str = os.environ["HOSTNAME"]
         info = all_nodes[self.node_name]
 
+        self.ready_neigh = 0
+        self.network_initialized = False
+        self.network_size = len(all_nodes.keys())
         self.loopback_ip: str = info["loopback_ip"]
-        self.mcast_group: str = info["multicast_group"]
-        self.mcast_port:  int = info["multicast_port"]
-        if self.mcast_port is None :
-            self.mcast_port = 5007
+        self.net_port = 5007
         self.neighbors_addr_list = []
-        self.lamport_clock = 0
+        self.neigh_to_check = []
+        self.msg_counter = 0
         self.path_to_logs_debug = "/logs/network/trans_"+self.node_name+".log"
+        self.path_to_journal = "/logs/network/journal_"+self.node_name+".log"
         self.write_log_debug("Tranceiver started with lo ip : "+ self.loopback_ip)
         for neig in info["neighbors"] :
             self.neighbors_addr_list.append([neig["loopback_ip"], neig["link_ip"]])
             self.write_log_debug("Neighbors added with lo ip : "+ neig["loopback_ip"] + "| and link ip :"+ neig["link_ip"])
+            self.neigh_to_check.append(neig["loopback_ip"])
 
         self.historic_transmission = {}
         self._stop_event = threading.Event()
@@ -74,14 +77,78 @@ class Transceiver:
         self._tx_sock:   socket.socket    | None = None
 
     def write_log_debug(self, log_message):
-        with open(self.path_to_logs_debug, 'a') as file:
-            file.write('\n'+log_message)
+        with open(self.path_to_logs_debug, 'a') as log_file:
+            log_file.write('\n'+log_message)
 
-    def increment_clock(self):
-        self.lamport_clock = lamport_clock +1
+    def add_rcv_journal(self, message, addr):
+        journal_entry = formatted(time.process_time()) +\
+                        formatted("RCV") +\
+                        formatted(addr) +\
+                        formatted(message["type"]) +\
+                        formatted(message["sender"]) +\
+                        formatted(message["counter"]) +\
+                        formatted(message["payload"])
+        with open(self.path_to_journal, 'a') as journal:
+            journal.write('\n'+journal_entry[:-2])
 
-    def merge_clock(self, received_clock:int):
-        self.lamport_clock = max(self.lamport_clock, received_clock)+1
+    def add_snt_journal(self, message, addr):
+        journal_entry = formatted(time.process_time()) +\
+                        formatted("SNT") +\
+                        formatted(addr) +\
+                        formatted(message["type"]) +\
+                        formatted(message["sender"]) +\
+                        formatted(message["counter"]) +\
+                        formatted(message["payload"])
+        self.write_log_debug(str(time.process_time()))
+        with open(self.path_to_journal, 'a') as journal:
+            journal.write('\n'+journal_entry[:-2])
+
+    def add_tra_journal(self, message, addr):
+        journal_entry = formatted(time.process_time()) +\
+                        formatted("TRA") +\
+                        formatted(addr) +\
+                        formatted(message["type"]) +\
+                        formatted(message["sender"]) +\
+                        formatted(message["counter"]) +\
+                        formatted(message["payload"])
+        self.write_log_debug(str(time.process_time()))
+        with open(self.path_to_journal, 'a') as journal:
+            journal.write('\n'+journal_entry[:-2])
+
+    def check_neighbors(self):
+        if not self._tx_sock:
+            self._tx_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._tx_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
+        message = {
+            "type": 6,
+            "sender": self.loopback_ip,
+            "counter": self.msg_counter,
+            "payload" : {}
+        }
+        msg = json.dumps(message).encode('utf-8')
+        while (not (len(self.neigh_to_check) == 0)):
+            for addr in self.neigh_to_check:
+                self.write_log_debug("sending heartbeat to : " + addr)
+                self._tx_sock.sendto(msg, (addr, self.net_port))
+                self.add_snt_journal( message, addr)
+
+            time.sleep(1)
+        self.write_log_debug("every neighbors are alive and ready")
+        message["type"]=7
+        msg = json.dumps(message).encode('utf-8')
+        for neig_addr in self.neighbors_addr_list:
+            self.write_log_debug("sending \"Ready\" to node :" + neig_addr[0])
+            try:
+                self._tx_sock.sendto(msg, (neig_addr[0], self.net_port))
+                self.add_snt_journal( message, neig_addr[0])
+            except Exception:
+                self.write_log_debug("node :" + neig_addr[0] + " error when sending \"Ready\"")
+                self.write_log_debug(traceback.format_exc())
+
+
+    def increment_counter(self):
+        self.msg_counter = self.msg_counter +1
 
     def transmit(self, message:dict, addr:str):
         self.write_log_debug("transmitting broadcast")
@@ -99,14 +166,10 @@ class Transceiver:
                         of a same message.
                 - payload: a dictionary containing concrete usefull data used in algorithms
         """
-        if not self._tx_sock:
-            self._tx_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self._tx_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
         message = {
-            "Bcast": True,
+            "type": 1,
             "sender": message["sender"],
-            "clock": message["clock"],
+            "counter": message["counter"],
             "payload" : message["payload"]
         }
         # Serialize and send to broadcast address
@@ -115,32 +178,69 @@ class Transceiver:
             if (addr == neig_addr[1]):#check link ip at reception, not loopback ip
                 self.write_log_debug("message not retransmited to lo : "+ neig_addr[0])
                 continue
-            self._tx_sock.sendto(data, (neig_addr[0], self.mcast_port))
+            self._tx_sock.sendto(data, (neig_addr[0], self.net_port))
+            self.add_tra_journal( message, neig_addr[0])
             self.write_log_debug("message transmited to lo : "+ neig_addr[0])
 
 
     def message_handler(self, data, addr):
-        self.write_log_debug("Message instance received :")
         message = json.loads(data.decode('utf-8'))
         self.write_log_debug(str(message))
-        if (message["Bcast"]):
-            if message["sender"] in self.historic_transmission:
-                if message["clock"] in self.historic_transmission[message["sender"]]:
-                    self.write_log_debug("Message already received, dumped")
-                    return #no further action => message is dumped
+        self.add_rcv_journal(message, addr[0])
+        match message["type"]:
+            case 0:
+                self.write_log_debug("Message instance received : Unicast")
+            case 1:
+                self.write_log_debug("Message instance received : Reliable Broadcast")
+                if message["sender"] in self.historic_transmission:
+                    if message["counter"] in self.historic_transmission[message["sender"]]:
+                        self.write_log_debug("Message already received, dumped")
+                        return #no further action => message is dumped
+                    else:
+                        self.historic_transmission[message["sender"]].append(message["counter"])
                 else:
-                    self.historic_transmission[message["sender"]].append(message["clock"])
-            else:
-                self.historic_transmission[message["sender"]] = [message["clock"]]
-            self.transmit(message, addr[0])
-        self.merge_clock(message["clock"])
-        self.on_message(message["payload"], addr[0])
+                    self.historic_transmission[message["sender"]] = [message["counter"]]
+                self.transmit(message, addr[0])
+
+            case 2:
+                self.write_log_debug("Message instance received : OSPF Broadcast")
+            case 6:
+                addr_sender = message["sender"]
+                self.write_log_debug("Message instance received : Heartbeat from : " + addr_sender)
+                if (addr_sender in self.neigh_to_check):
+                    self.write_log_debug("node :" + addr_sender + " is alive and ready")
+                    self.neigh_to_check.remove(addr_sender)
+                    message = {
+                        "type": 6,
+                        "sender": self.loopback_ip,
+                        "counter": self.msg_counter,
+                        "payload" : {}
+                    }
+                    msg = json.dumps(message).encode('utf-8')
+                    self.write_log_debug("sending heartbeat answer to : " + addr_sender)
+                    self._tx_sock.sendto(msg, (addr_sender, self.net_port))
+                else:
+                    self.write_log_debug("node :" + addr_sender + " redundant heartbeat")
+                    self.write_log_debug(str(self.neigh_to_check))
+
+
+            case 7:
+                self.ready_neigh += 1
+                self.write_log_debug("Message instance received : Ready from : " + message["sender"] + "(ready number "+ str(self.ready_neigh) +"/" + str(len(self.neighbors_addr_list)) + ")")
+                if (self.ready_neigh == len(self.neighbors_addr_list)):
+                    self.network_initialized = True
+                    self.write_log_debug("network is ready")
+
+            case _:
+                self.write_log_debug("Message instance received : Unknown type")
+
+        self.on_message(message, addr[0])
 
     # ------------------------------------------------------------------
     # TX
     # ------------------------------------------------------------------
 
-    def send_broadcast(self, payload: dict):
+
         """Send a broadcast message to all nodes on the network.
         Args:
             payload: Dictionary to send (will be JSON serialized)
@@ -154,21 +254,62 @@ class Transceiver:
                         of a same message.
                 - payload: a dictionary containing concrete usefull data used in algorithms
         """
-        if not self._tx_sock:
-            self._tx_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self._tx_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    def send_broadcast(self, payload: dict):
+        self.increment_counter()
 
         self.write_log_debug("Sending broadcast")
         message = {
-            "Bcast": True,
+            "type": 1,
             "sender": self.loopback_ip,
-            "clock": self.lamport_clock,
+            "counter": self.msg_counter,
             "payload" : payload
         }
         # Serialize and send to broadcast address
         data = json.dumps(message).encode('utf-8')
         for neig_addr in self.neighbors_addr_list:
-            self._tx_sock.sendto(data, (neig_addr[0], self.mcast_port))
+            try:
+                self._tx_sock.sendto(data, (neig_addr[0], self.net_port))
+                self.add_snt_journal( message, neig_addr[0])
+            except Exception:
+                self.write_log_debug(traceback.format_exc())
+
+    #
+    # def send_ospf_broadcast(self, payload: dict):
+    #     self.increment_counter()
+    #
+    #     self.write_log_debug("Sending ospf broadcast")
+    #     message = {
+    #         "type": 2,
+    #         "sender": self.loopback_ip,
+    #         "counter": self.msg_counter,
+    #         "payload" : payload
+    #     }
+    #     # Serialize and send to broadcast address
+    #     data = json.dumps(message).encode('utf-8')
+    #     try:
+    #         self._tx_sock.sendto(data, ("239.0.1.1", self.net_port))
+    #         self.add_snt_journal( message, "239.0.1.1")
+    #     except Exception:
+    #         self.write_log_debug(traceback.format_exc())
+
+
+    def send_unicast(self, payload: dict, addr: str):
+        self.increment_counter()
+
+        self.write_log_debug("Sending Unicast to : "+ addr)
+        message = {
+            "type": 0,
+            "sender": self.loopback_ip,
+            "counter": self.msg_counter,
+            "payload" : payload
+        }
+        # Serialize and send to broadcast address
+        data = json.dumps(message).encode('utf-8')
+        try:
+            self._tx_sock.sendto(data, (addr, self.net_port))
+            self.add_snt_journal( message, addr)
+        except Exception:
+            self.write_log_debug(traceback.format_exc())
 
     # ------------------------------------------------------------------
     # RX callback — override in subclasses
@@ -198,6 +339,7 @@ class Transceiver:
             target=self._rx_loop, daemon=True, name=f"{self.node_name}-rx"
         )
         self._rx_thread.start()
+        self.check_neighbors()
 
     def stop(self) -> None:
         """Signal the RX thread to stop and wait for it to finish."""
@@ -226,7 +368,7 @@ class Transceiver:
     def _create_rx_socket(self) -> socket.socket:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(("", self.mcast_port))
+        sock.bind(("", self.net_port))
         # mreq = struct.pack("4sL", socket.inet_aton(self.mcast_group), socket.INADDR_ANY)
         # sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
         sock.settimeout(self._RX_TIMEOUT)

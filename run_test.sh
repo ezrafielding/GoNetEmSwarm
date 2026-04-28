@@ -171,7 +171,8 @@ cmd_logs() {
 
 cmd_clean() {
     echo "Cleaning logs directory: $LOGS_DIR"
-    rm -f "$LOGS_DIR"/*.log "$LOGS_DIR"/*.json 2>/dev/null || true
+    rm -f "$LOGS_DIR"/*.log 2>/dev/null || true #"$LOGS_DIR"/*.json
+    rm -f "$LOGS_DIR"/network/*.log  2>/dev/null || true
     echo "Done."
 }
 
