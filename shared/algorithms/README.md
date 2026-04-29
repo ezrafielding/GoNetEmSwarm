@@ -10,7 +10,7 @@ Messages are dictionaries with the following items :
 ## How to send message :
 ### Reliable Broadcast :
 Thanks to the self.send_broadcast(payload: dict) method.
-Reliable => use a big amount of message to communicate (n^2 where n is the number of links in the network graph) but ensure that every node in the same connected graph as the sender will get the message.
+Reliable => use a big amount of message to communicate (~2*n where n is the number of links in the network graph) but ensure that every node in the same connected graph as the sender will get the message.
 
 ### Normal Broadcast :
 Not implemented, but thanks to wireshark I learned that OSPF allow for broadcast with the 224.0.0.5 address. Can't get it to work tho. Maybe later.

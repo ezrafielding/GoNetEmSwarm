@@ -83,6 +83,17 @@ class Transceiver:
     def get_local_time(self):
         return time.process_time()
 
+    def add_fst_line_journal(self):
+        journal_entry = formatted("Local Time") +\
+                        formatted("Event") +\
+                        formatted(addr) +\
+                        formatted("Message Type") +\
+                        formatted("Message Sender") +\
+                        formatted("Message Counter") +\
+                        formatted("Message Payload")
+        with open(self.path_to_journal, 'a') as journal:
+            journal.write('\n'+journal_entry[:-2])
+
     def add_rcv_journal(self, message, addr):
         journal_entry = formatted(self.get_local_time()) +\
                         formatted("RCV") +\
@@ -333,6 +344,7 @@ class Transceiver:
     # ------------------------------------------------------------------
 
     def start(self) -> None:
+        self.add_fst_line_journal()
         """Open the multicast socket and start the background RX thread."""
         if self._rx_thread is not None and self._rx_thread.is_alive():
             return
