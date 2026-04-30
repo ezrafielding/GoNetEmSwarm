@@ -21,6 +21,14 @@ class Transceiver:
     """Multicast transceiver base class.
 
     Subclass and override on_message() to react to incoming datagrams.
+        What is a message : the sent message contains 4 elements:
+                - type:bool (true if message is a broadcast, false if unicast)
+                - sender: loopback ip address of the original sender (of this node
+                        in this case.)
+                - sending_time : local logical lamport time of the originating node when
+                        message is first send. To be able to recognize multiples instances
+                        of a same message.
+                - payload: a dictionary containing concrete usefull data used in algorithms
 
     Usage:
 
@@ -94,6 +102,7 @@ class Transceiver:
                 self.add_snt_journal(message, ip_addr)
         except Exception:
             self.write_log_debug("Unable to send packets :" + str(traceback.format_exc()) )
+            pass  # never let the TX thread crash
 
 
     def get_local_time(self):
@@ -151,11 +160,12 @@ class Transceiver:
         message = {
             "type": 6,
             "sender": self.loopback_ip,
-            "counter": self.msg_counter,
             "payload" : {}
         }
         while (not (len(self.neigh_to_check) == 0)):
             for addr in self.neigh_to_check:
+                self.increment_counter()
+                message["counter"] = self.msg_counter
                 self.send_packets(message, addr)
 
             time.sleep(1)
@@ -163,6 +173,8 @@ class Transceiver:
         message["type"]=7
         for neig_addr in self.neighbors_addr_list:
             self.write_log_debug("sending \"Ready\" to node :" + neig_addr[0])
+            self.increment_counter()
+            message["counter"] = self.msg_counter
             self.send_packets(message, neig_addr[0])
 
     def increment_counter(self):
@@ -172,24 +184,10 @@ class Transceiver:
         self.write_log_debug("transmitting broadcast")
         """transmit a broadcast message to all neighbors who aren't senders.
         Args:
-            message: Dictionaryrepresenting a message like described in send_broadcast comment
+            message: Dictionary representing a message
             addr: tuple (ip_addr, port) of the previous carrier node of the message
 
-        What is a message : the sent message contains 4 elements:
-                - type:bool (true if message is a broadcast, false if unicast)
-                - sender: loopback ip address of the original sender (of this node
-                        in this case.)
-                - sending_time : local logical lamport time of the originating node when
-                        message is first send. To be able to recognize multiples instances
-                        of a same message.
-                - payload: a dictionary containing concrete usefull data used in algorithms
         """
-        message = {
-            "type": 1,
-            "sender": message["sender"],
-            "counter": message["counter"],
-            "payload" : message["payload"]
-        }
         # Serialize and send to broadcast address
         for neig_addr in self.neighbors_addr_list:
             if (addr == neig_addr[1]):#check link ip at reception, not loopback ip
@@ -199,10 +197,8 @@ class Transceiver:
             self.write_log_debug("message transmited to lo : "+ neig_addr[0])
 
 
-    def message_handler(self, data, addr):
-        message = json.loads(data.decode('utf-8'))
+    def message_handler(self, message, addr):
         self.write_log_debug(str(message))
-        self.add_rcv_journal(message, addr[0])
         match message["type"]:
             case 0:
                 self.write_log_debug("Message instance received : Unicast")
@@ -226,6 +222,7 @@ class Transceiver:
                 if (addr_sender in self.neigh_to_check):
                     self.write_log_debug("node :" + addr_sender + " is alive and ready")
                     self.neigh_to_check.remove(addr_sender)
+                    self.increment_counter()
                     message = {
                         "type": 6,
                         "sender": self.loopback_ip,
@@ -248,9 +245,6 @@ class Transceiver:
 
             case _:
                 self.write_log_debug("Message instance received : Unknown type")
-
-        self.on_message(message, addr[0])
-
     # ------------------------------------------------------------------
     # TX
     # ------------------------------------------------------------------
@@ -259,19 +253,9 @@ class Transceiver:
         """Send a broadcast message to all nodes on the network.
         Args:
             payload: Dictionary to send (will be JSON serialized)
-
-        What is a message : the sent message contains 4 elements:
-                - type:bool (true if message is a broadcast, false if unicast)
-                - sender: loopback ip address of the original sender (of this node
-                        in this case.)
-                - sending_time : local logical lamport time of the originating node when
-                        message is first send. To be able to recognize multiples instances
-                        of a same message.
-                - payload: a dictionary containing concrete usefull data used in algorithms
         """
     def send_broadcast(self, payload: dict):
         self.increment_counter()
-
         self.write_log_debug("Sending broadcast")
         message = {
             "type": 1,
@@ -383,7 +367,10 @@ class Transceiver:
             except OSError:
                 break
             try:
-                self.message_handler(data, addr)
+                message = json.loads(data.decode('utf-8'))
+                self.add_rcv_journal(message, addr[0])
+                self.message_handler(message, addr)
+                self.on_message(message, addr[0])
             except Exception:
                 self.write_log_debug(traceback.format_exc())
                 pass  # never let a handler crash the RX thread
