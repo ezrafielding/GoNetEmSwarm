@@ -76,9 +76,25 @@ class Transceiver:
         self._tx_thread: threading.Thread | None = None
         self._tx_sock:   socket.socket    | None = None
 
-    def write_log_debug(self, log_message):
+    def write_log_debug(self, log_message, service_name : str = "Tranceiver"):
         with open(self.path_to_logs_debug, 'a') as log_file:
-            log_file.write('\n'+log_message)
+            log_file.write('\n'+str(self.get_local_time())+" "+service_name+" : "+log_message)
+
+    def send_packets(self, message: dict, ip_addr: str, transfert:bool = False):
+        if not self._tx_sock:
+            self._tx_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._tx_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.write_log_debug("sending packet packet to " + ip_addr + " with content "+ str(message))
+        try:
+            data = json.dumps(message).encode('utf-8')
+            self._tx_sock.sendto(data, (ip_addr, self.net_port))
+            if transfert:
+                self.add_tra_journal(message, ip_addr)
+            else:
+                self.add_snt_journal(message, ip_addr)
+        except Exception:
+            self.write_log_debug("Unable to send packets :" + str(traceback.format_exc()) )
+
 
     def get_local_time(self):
         return time.process_time()
@@ -86,7 +102,7 @@ class Transceiver:
     def add_fst_line_journal(self):
         journal_entry = formatted("Local Time") +\
                         formatted("Event") +\
-                        formatted(addr) +\
+                        formatted("Ip Address") +\
                         formatted("Message Type") +\
                         formatted("Message Sender") +\
                         formatted("Message Counter") +\
@@ -130,9 +146,7 @@ class Transceiver:
             journal.write('\n'+journal_entry[:-2])
 
     def check_neighbors(self):
-        if not self._tx_sock:
-            self._tx_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self._tx_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
 
         message = {
             "type": 6,
@@ -140,26 +154,16 @@ class Transceiver:
             "counter": self.msg_counter,
             "payload" : {}
         }
-        msg = json.dumps(message).encode('utf-8')
         while (not (len(self.neigh_to_check) == 0)):
             for addr in self.neigh_to_check:
-                self.write_log_debug("sending heartbeat to : " + addr)
-                self._tx_sock.sendto(msg, (addr, self.net_port))
-                self.add_snt_journal( message, addr)
+                self.send_packets(message, addr)
 
             time.sleep(1)
         self.write_log_debug("every neighbors are alive and ready")
         message["type"]=7
-        msg = json.dumps(message).encode('utf-8')
         for neig_addr in self.neighbors_addr_list:
             self.write_log_debug("sending \"Ready\" to node :" + neig_addr[0])
-            try:
-                self._tx_sock.sendto(msg, (neig_addr[0], self.net_port))
-                self.add_snt_journal( message, neig_addr[0])
-            except Exception:
-                self.write_log_debug("node :" + neig_addr[0] + " error when sending \"Ready\"")
-                self.write_log_debug(traceback.format_exc())
-
+            self.send_packets(message, neig_addr[0])
 
     def increment_counter(self):
         self.msg_counter = self.msg_counter +1
@@ -187,13 +191,11 @@ class Transceiver:
             "payload" : message["payload"]
         }
         # Serialize and send to broadcast address
-        data = json.dumps(message).encode('utf-8')
         for neig_addr in self.neighbors_addr_list:
             if (addr == neig_addr[1]):#check link ip at reception, not loopback ip
                 self.write_log_debug("message not retransmited to lo : "+ neig_addr[0])
                 continue
-            self._tx_sock.sendto(data, (neig_addr[0], self.net_port))
-            self.add_tra_journal( message, neig_addr[0])
+            self.send_packets(message, neig_addr[0])
             self.write_log_debug("message transmited to lo : "+ neig_addr[0])
 
 
@@ -230,9 +232,8 @@ class Transceiver:
                         "counter": self.msg_counter,
                         "payload" : {}
                     }
-                    msg = json.dumps(message).encode('utf-8')
                     self.write_log_debug("sending heartbeat answer to : " + addr_sender)
-                    self._tx_sock.sendto(msg, (addr_sender, self.net_port))
+                    self.send_packets(message, addr_sender)
                 else:
                     self.write_log_debug("node :" + addr_sender + " redundant heartbeat")
                     self.write_log_debug(str(self.neigh_to_check))
@@ -279,13 +280,8 @@ class Transceiver:
             "payload" : payload
         }
         # Serialize and send to broadcast address
-        data = json.dumps(message).encode('utf-8')
         for neig_addr in self.neighbors_addr_list:
-            try:
-                self._tx_sock.sendto(data, (neig_addr[0], self.net_port))
-                self.add_snt_journal( message, neig_addr[0])
-            except Exception:
-                self.write_log_debug(traceback.format_exc())
+            self.send_packets(message, neig_addr[0])
 
     #
     # def send_ospf_broadcast(self, payload: dict):
@@ -299,12 +295,7 @@ class Transceiver:
     #         "payload" : payload
     #     }
     #     # Serialize and send to broadcast address
-    #     data = json.dumps(message).encode('utf-8')
-    #     try:
-    #         self._tx_sock.sendto(data, ("239.0.1.1", self.net_port))
-    #         self.add_snt_journal( message, "239.0.1.1")
-    #     except Exception:
-    #         self.write_log_debug(traceback.format_exc())
+    #     self.send_packets(message, "224.0.0.5")
 
 
     def send_unicast(self, payload: dict, addr: str):
@@ -317,13 +308,7 @@ class Transceiver:
             "counter": self.msg_counter,
             "payload" : payload
         }
-        # Serialize and send to broadcast address
-        data = json.dumps(message).encode('utf-8')
-        try:
-            self._tx_sock.sendto(data, (addr, self.net_port))
-            self.add_snt_journal( message, addr)
-        except Exception:
-            self.write_log_debug(traceback.format_exc())
+        self.send_packets(message, addr)
 
     # ------------------------------------------------------------------
     # RX callback — override in subclasses
