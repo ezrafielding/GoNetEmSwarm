@@ -7,7 +7,7 @@ import time
 
 _CATALOG_MSG_TYPE = "lww_assign"
 _GP_UPDATE_INTERVAL = 5  # seconds between CRDT updates from ground node
-_DATA_PATH = "/algorithms/data/cubesat.json"
+_DATA_PATH = "/algorithms/data/test.json"
 
 
 def _fmt(value):
@@ -63,11 +63,12 @@ class Catalog(Transceiver):
             snapshot = sorted(self._store.items())
         with open(self.path_to_catalog_csv, 'w', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(["item_id", "object_name", "version"])
+            writer.writerow(["item_id", "object_name", "epoch", "version"])
             for item_id, entry in snapshot:
                 val = entry["value"]
                 obj_name = val.get("OBJECT_NAME", item_id) if isinstance(val, dict) else str(val)
-                writer.writerow([item_id, obj_name, entry["timestamp"]])
+                epoch = val.get("EPOCH", "") if isinstance(val, dict) else ""
+                writer.writerow([item_id, obj_name, epoch, entry["timestamp"]])
 
     def _log_crdt(self, event: str, item_id: str, crdt_ts: int, from_ip: str = "-"):
         entry = (_fmt(f"{time.time():.4f}") +
