@@ -24,7 +24,7 @@ class Dumped(Exception):
 
 
 class Transceiver:
-    """Multicast transceiver base class.
+    """Broadcast transceiver base class.
 
     Subclass and override on_message() to react to incoming datagrams.
         What is a message : the sent message contains 4 elements:
@@ -35,28 +35,6 @@ class Transceiver:
                         message is first send. To be able to recognize multiples instances
                         of a same message.
                 - payload: a dictionary containing concrete usefull data used in algorithms
-
-    Usage:
-
-        class MyAlgorithm(Transceiver):
-            def on_message(self, data: bytes, addr: tuple):
-                msg = json.loads(data.decode())
-                print(f"got {msg} from {addr}")
-
-        algo = MyAlgorithm()
-        with algo:              # starts RX thread, stops on exit
-            algo.send_broadcast(b"hello")
-            time.sleep(5)
-
-    Or manage the lifecycle manually:
-
-        algo.start()
-        algo.send_broadcast(b"hello")
-        algo.stop()
-
-    node_configs.json keys used:
-        loopback_ip     — TX source address (kernel RPF check)
-        neighbors       — list of neighbors, unkown in top level, only for emulating bcast
     """
 
     _RX_TIMEOUT = 1.0   # recvfrom block duration; also caps stop() wait time
@@ -273,20 +251,6 @@ class Transceiver:
         # Serialize and send to broadcast address
         for neig_addr in self.neighbors_addr_list:
             self.send_packets(message, neig_addr[0])
-
-    #
-    # def send_ospf_broadcast(self, payload: dict):
-    #     self.increment_counter()
-    #
-    #     self.write_log_debug("Sending ospf broadcast")
-    #     message = {
-    #         "type": 2,
-    #         "sender": self.loopback_ip,
-    #         "counter": self.msg_counter,
-    #         "payload" : payload
-    #     }
-    #     # Serialize and send to broadcast address
-    #     self.send_packets(message, "224.0.0.5")
 
 
     def send_unicast(self, payload: dict, addr: str):
