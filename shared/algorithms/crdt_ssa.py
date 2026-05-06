@@ -1,10 +1,11 @@
 from tranceiver import Transceiver
+import argparse
+import csv
 import json
 import threading
 import time
 
 _CATALOG_MSG_TYPE = "lww_assign"
-_GROUND_NODE = "sat1"
 _GP_UPDATE_INTERVAL = 5  # seconds between CRDT updates from ground node
 _DATA_PATH = "/algorithms/data/cubesat.json"
 
@@ -31,7 +32,9 @@ class Catalog(Transceiver):
         self._store: dict[str, dict] = {}
         self._lock = threading.Lock()
         self.path_to_crdt_log = "/logs/crdt_" + self.node_name + ".log"
+        self.path_to_catalog_csv = "/logs/catalog_" + self.node_name + ".csv"
         self._write_crdt_header()
+        self._write_catalog_csv()
 
     # ------------------------------------------------------------------
     # CRDT metrics log  (separate from the transceiver debug/journal logs)
@@ -53,6 +56,18 @@ class Catalog(Transceiver):
                     _fmt("Item_ID") +
                     _fmt("CRDT_TS") +
                     _fmt("From_IP"))
+
+    def _write_catalog_csv(self):
+        """Overwrite the catalog CSV with the current snapshot of every entry."""
+        with self._lock:
+            snapshot = sorted(self._store.items())
+        with open(self.path_to_catalog_csv, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["item_id", "object_name", "version"])
+            for item_id, entry in snapshot:
+                val = entry["value"]
+                obj_name = val.get("OBJECT_NAME", item_id) if isinstance(val, dict) else str(val)
+                writer.writerow([item_id, obj_name, entry["timestamp"]])
 
     def _log_crdt(self, event: str, item_id: str, crdt_ts: int, from_ip: str = "-"):
         entry = (_fmt(f"{time.time():.4f}") +
@@ -108,6 +123,7 @@ class Catalog(Transceiver):
             timestamp = (entry["timestamp"] if entry else 0) + 1
             self._store[item_id] = {"value": value, "timestamp": timestamp}
         self._log_crdt("CRDT_SND", item_id, timestamp)
+        self._write_catalog_csv()
         self.write_log_debug(
             "CRDT assign: id=" + item_id + " ts=" + str(timestamp), "Catalog"
         )
@@ -154,6 +170,7 @@ class Catalog(Transceiver):
                 updated = True
         if updated:
             self._log_crdt("CRDT_UPD", item_id, timestamp)
+            self._write_catalog_csv()
             self.write_log_debug(
                 "CRDT store updated: id=" + item_id + " ts=" + str(timestamp),
                 "Catalog",
@@ -169,6 +186,13 @@ def _load_gp_entries(path: str = _DATA_PATH) -> list:
         return json.load(f)
 
 
+parser = argparse.ArgumentParser(description="CRDT SSA catalog")
+parser.add_argument(
+    "--ground", metavar="NODE", default="sat1",
+    help="name of the ground node that originates GP updates (default: sat1)",
+)
+args = parser.parse_args()
+
 catalog = Catalog()
 catalog.start()
 
@@ -177,17 +201,17 @@ while not catalog.network_initialized:
 
 catalog.write_log_debug("Network initialized, catalog ready", "Catalog")
 
-if catalog.node_name == _GROUND_NODE:
+if catalog.node_name == args.ground:
     gp_entries = _load_gp_entries()
     catalog.write_log_debug(
-        "Ground node: loaded " + str(len(gp_entries)) +
+        "Ground node (" + args.ground + "): loaded " + str(len(gp_entries)) +
         " GP entries, sending one every " + str(_GP_UPDATE_INTERVAL) + "s",
         "Catalog",
     )
     idx = 0
     while True:
         entry = gp_entries[idx % len(gp_entries)]
-        item_id = str(entry["NORAD_CAT_ID"])
+        item_id = str(entry["OBJECT_ID"])
         catalog.assign(item_id, entry)
         idx += 1
         time.sleep(_GP_UPDATE_INTERVAL)
