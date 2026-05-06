@@ -56,7 +56,7 @@ You can either do your own logging or use the already existent ones:
 please note that there is no global time measure, only local time. (As global time is kinda irrelevant in our context)
 - The script plot_chronogram.py read journals entry and represent them in a chrornogram format, much more readable, with every nodes on the same figure. Rn it in probably not pretty enough to be used in a regular paper, but It can still help for debugging purpose
 it looks like this : 
-[!mono_tree_full_mesh_5.png]
+  ![mono_tree_full_mesh_5.png]
 ## Most important :
 I recently stumbled a lot because I wasn't aware that in the current model, communication isn't FIFO. please beware of that (a FIFO version is comming soon)
 If you got any issues, I am probably not very far away, don't hesitate to reach out to me !
