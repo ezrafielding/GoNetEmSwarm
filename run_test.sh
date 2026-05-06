@@ -3,17 +3,17 @@
 #               in a running gonetem topology.
 #
 # Usage:
-#   ./run_test.sh start <algorithm> [wakeup_node]
+#   ./run_test.sh start <algorithm> [args...]
 #   ./run_test.sh stop
 #   ./run_test.sh status
 #   ./run_test.sh logs [algorithm]
 #   ./run_test.sh clean
 #
 # Examples:
-#   ./run_test.sh start crdt_test
-#   ./run_test.sh start leader_test 1     # node 1 wakes up first
+#   ./run_test.sh start crdt_ssa
+#   ./run_test.sh start crdt_ssa --ground sat3
 #   ./run_test.sh stop
-#   ./run_test.sh logs leader_test
+#   ./run_test.sh logs crdt_ssa
 #
 # Prerequisites:
 #   1. Build the satellite image:    ./build_image.sh
@@ -66,9 +66,8 @@ id_from_node() {
 
 cmd_start() {
     local algorithm="${1:-}"
-    local wakeup_node="${2:-1}"
-
-    [[ -n "$algorithm" ]] || die "Usage: $0 start <algorithm> [wakeup_node]"
+    [[ -n "$algorithm" ]] || die "Usage: $0 start <algorithm> [args...]"
+    shift
 
     # Resolve script path (try .py first, then bare name)
     local algo_file
@@ -87,7 +86,7 @@ cmd_start() {
         die "No satellite containers found. Open a .gnet topology in gonetem first."
 
     mkdir -p "$LOGS_DIR"
-    echo "Starting '$algorithm' on ${#containers[@]} nodes (wakeup_node=$wakeup_node)…"
+    echo "Starting '$algorithm' on ${#containers[@]} nodes${*:+ (args: $*)}…"
 
     for container in "${containers[@]}"; do
         local node
@@ -98,11 +97,10 @@ cmd_start() {
         docker exec -d \
             -e SAT_ID="$sat_id" \
             -e SAT_NAME="$node" \
-            -e WAKEUP_NODE="$wakeup_node" \
             -e LOG_DIR="/logs" \
             -e CONFIG_FILE="/algorithms/node_configs.json" \
             "$container" \
-            python3 "$algo_file" \
+            python3 "$algo_file" "$@" \
           && echo "  ✓ $node  ($container)"  \
           || echo "  ✗ $node  ($container)  [exec failed]"
     done
@@ -173,6 +171,7 @@ cmd_clean() {
     echo "Cleaning logs directory: $LOGS_DIR"
     rm -f "$LOGS_DIR"/*.log 2>/dev/null || true #"$LOGS_DIR"/*.json
     rm -f "$LOGS_DIR"/*.json 2>/dev/null || true
+    rm -f "$LOGS_DIR"/*.csv 2>/dev/null || true
     rm -f "$LOGS_DIR"/network/*.log  2>/dev/null || true
     echo "Done."
 }
