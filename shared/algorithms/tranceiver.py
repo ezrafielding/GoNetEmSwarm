@@ -17,6 +17,12 @@ import time
 def formatted(value):
     return " "+str(value)+" |"
 
+class Dumped(Exception):
+    def __init__(self):
+        self.message = "Message dumped"
+        super().__init__(self.message)
+
+
 class Transceiver:
     """Multicast transceiver base class.
 
@@ -117,7 +123,7 @@ class Transceiver:
                         formatted("Message Counter") +\
                         formatted("Message Payload")
         with open(self.path_to_journal, 'a') as journal:
-            journal.write('\n'+journal_entry[:-2])
+            journal.write(journal_entry[:-2])
 
     def add_rcv_journal(self, message, addr):
         journal_entry = formatted(self.get_local_time()) +\
@@ -207,6 +213,7 @@ class Transceiver:
                 if message["sender"] in self.historic_transmission:
                     if message["counter"] in self.historic_transmission[message["sender"]]:
                         self.write_log_debug("Message already received, dumped")
+                        raise Dumped()
                         return #no further action => message is dumped
                     else:
                         self.historic_transmission[message["sender"]].append(message["counter"])

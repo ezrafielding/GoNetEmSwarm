@@ -1,4 +1,4 @@
-from tranceiver import Transceiver
+from tranceiver_queue import Transceiver_queue
 import time
 
 # ===========================================================================
@@ -6,47 +6,7 @@ import time
 # ===========================================================================
 
 
-class simple_broadcast(Transceiver):
-    """CRDT-based distributed key-value catalog.
-
-    Each entry is an op-based Last-Write-Wins Register:
-
-        payload  X x, timestamp t
-        initial  ⊥, 0
-        query    value()      → x
-        update   assign(x')
-                   atSource   → t' = t + 1   (per-item integer counter)
-                   downstream(x', t') → if t < t' then x, t := x', t'
-
-    Downstream ops are broadcast to the swarm via multicast (Transceiver).
-
-    Usage:
-
-        class MyAlgorithm(Catalog):
-            pass                    # on_message already handles merges
-
-        algo = MyAlgorithm()
-        with algo:
-            algo.assign("orbit", {"alt": 550, "inc": 53.0})
-            time.sleep(1)
-            print(algo.value("orbit"))
-            print(algo.items())
-
-    Dict-style access:
-
-        algo["orbit"] = {"alt": 550}
-        print(algo["orbit"])
-        print("orbit" in algo)
-        print(len(algo))
-
-    Reacting to incoming updates — override on_message and call super():
-
-        class MyAlgorithm(Catalog):
-            def on_message(self, data: bytes, addr: tuple):
-                super().on_message(data, addr)   # merge first
-                print(f"catalog now: {self.items()}")
-    """
-
+class simple_broadcast(Transceiver_queue):
     def __init__(self):
 
         self.path_to_logs = "/logs/"

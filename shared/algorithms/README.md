@@ -1,8 +1,22 @@
 # What do you need to know to use tranceiver.py :
 
+## New Stuff :
+
+### Normal Broadcast with tranceiver_tree :
+If you use a tranceiver_tree, you have acess to broadcast thanks to self.send_tree_broadcast(paylod: dict) It works the same way as the reliable broadcast, except it take much less messages.
+But  for Ittowork properly, tree needs to be finished before sending the message (at least locally for the sender node). If tree isn't finished, an UnfinishedTreeException is raised.
+
+### Chronogram plotting with plot_chronogram.py :
+more info at the end of the readme
+
+### Tranceiver_queue :
+A new version of tranceiver wich now support a message queue.
+When calling backend message_handler on a packet, you can raise the NotReady exception, in wich case message won't be delivered, will be sent at the back of the queue letting other messages to be handled in the meantime.
+Not really usefull rn, but it is a start for future more complexe message passing implementation like FIFO or Causal
+
 ## Messages :
 Messages are dictionaries with the following items :
-- "type":int (0:Unicast 1:Reliable_Broadcast 2-5:Placeholder 6:HeartBeat 7:Ready (6&7 Only used for backend network readyness detection, no use in proper algorithms).)
+- "type":int (0:Unicast 1:Reliable_Broadcast 2:Simple_Broadcast (only implemented with spaning tree rn) 3-5:Placeholder 6:HeartBeat 7:Ready (6&7 Only used for backend network readyness detection, no use in proper algorithms). 8:Messages related to tree creation)
 - "sender":str (IP address of the loopback interface of the node from wich the message originated.)
 - "counter":int (message counter for message indentification purpose.)
 - "payload":dict (user defined part of the message, where the data needed for algorithms are stocked)
@@ -11,9 +25,6 @@ Messages are dictionaries with the following items :
 ### Reliable Broadcast :
 Thanks to the self.send_broadcast(payload: dict) method.
 Reliable => use a big amount of message to communicate (~2*n where n is the number of links in the network graph) but ensure that every node in the same connected graph as the sender will get the message.
-
-### Normal Broadcast :
-Not implemented, but thanks to wireshark I learned that OSPF allow for broadcast with the 224.0.0.5 address. Can't get it to work tho. Maybe later.
 
 ### Unicast :
 Thanks to the self.send_unicast(payload: dict, addr:str) method. (addr is the loopback ip of the node you want to send the message to.)
@@ -43,7 +54,10 @@ You can either do your own logging or use the already existent ones:
 - Detailed "readable" logging for debug and troubleshoting containing some exception can be found in shared/logs/network/trans_{sat_name}.log 
 - A list of every message related event (RCV: message received, SNT: message sent, TRA: message transmitted) with their local timestamp is automatically generated in the shared/logs/journal_{sat_name}.log
 please note that there is no global time measure, only local time. (As global time is kinda irrelevant in our context)
-
+- The script plot_chronogram.py read journals entry and represent them in a chrornogram format, much more readable, with every nodes on the same figure. Rn it in probably not pretty enough to be used in a regular paper, but It can still help for debugging purpose
+it looks like this : 
+[!mono_tree_full_mesh_5.png]
 ## Most important :
+I recently stumbled a lot because I wasn't aware that in the current model, communication isn't FIFO. please beware of that (a FIFO version is comming soon)
 If you got any issues, I am probably not very far away, don't hesitate to reach out to me !
 
