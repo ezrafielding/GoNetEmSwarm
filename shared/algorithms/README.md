@@ -7,7 +7,9 @@
 use generate_topology.py with the argument --ground_station or -g to generate a topology with a certain number of ground stations.
 use runtest.sh gndstart \[algorithm\] to run an algorithm on ground stations. ground station algorithms need to implements the Ground_Transceiver object.
 if you want to run a scenario using both ground stations and satellitse, you can use run_test.sh fullstart \[algorithm\] and it will run the algorithme named $algorithm"_sat.py" on sat nodes and $algorithm"_gnd.py" on ground station nodes.
-There is an exemple in ground_test(_sat/_gnd).py
+There is an exemple in ground_test(_sat/_gnd).py where ground station comunicate randomly.
+**There is an exemple in cycle_test(_sat/_gnd).py where ground ground station communicate randomly but ensure to cycle through every satelites**
+
 #### Ground Station :
 For now ground station work in the following way:
 Every "self.link_duration: int (seconds)" a new satellite is choosen (among the self.satellite_addr_list list) using the self.get_next_link() method. The default get_next_link implementation is using random.choice, but feel free to override it.

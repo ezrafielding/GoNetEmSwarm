@@ -1,0 +1,25 @@
+# Satellite node image for gonetem swarm emulation.
+#
+# Extends the gonetem FRR router image (Debian Bookworm + FRR with ospfd)
+# with the Python packages used by the ConSwarm distributed algorithms.
+#
+# Build via build_image.sh (auto-detects version) or manually:
+#   GONETEM_VERSION=$(cat ../gonetem/VERSION)
+#   docker build --build-arg GONETEM_VERSION=$GONETEM_VERSION \
+#                -f Dockerfile.satellite -t gonetem-satellite:latest .
+
+ARG GONETEM_VERSION=0.6.0
+FROM mroy31/gonetem-frr:${GONETEM_VERSION}
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3 \
+        python3-numpy \
+        python3-matplotlib \
+        python3-netifaces \
+        netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create the mount-point directories so they exist even if volumes are absent
+RUN mkdir -p /algorithms /logs
+
+# The base image CMD (/usr/bin/iinit.py) starts FRR daemons; keep it.
