@@ -335,31 +335,30 @@ def plot_topology_map(all_nodes, results, out_path):
         fig = plt.figure(figsize=(20, 10))
         ax = fig.add_subplot(1, 1, 1, projection=ccrs.Robinson())
         ax.set_global()
-        ax.add_feature(cfeature.LAND,      facecolor="#2a2a2a")
-        ax.add_feature(cfeature.OCEAN,     facecolor="#0d1b2a")
-        ax.add_feature(cfeature.COASTLINE, linewidth=0.4, edgecolor="#555555")
-        ax.add_feature(cfeature.BORDERS,   linewidth=0.2, edgecolor="#444444")
-        ax.gridlines(linewidth=0.2, color="#333333", linestyle="--")
+        ax.add_feature(cfeature.LAND,      facecolor="#e8e4d9")
+        ax.add_feature(cfeature.OCEAN,     facecolor="#cfe2f3")
+        ax.add_feature(cfeature.COASTLINE, linewidth=0.4, edgecolor="#888888")
+        ax.add_feature(cfeature.BORDERS,   linewidth=0.2, edgecolor="#aaaaaa")
+        ax.gridlines(linewidth=0.2, color="#bbbbbb", linestyle="--")
         plot_kw = {"transform": transform}
     else:
         fig, ax = plt.subplots(figsize=(20, 10))
-        ax.set_facecolor("#0d1b2a")
+        ax.set_facecolor("#cfe2f3")
         ax.set_xlim(-180, 180)
         ax.set_ylim(-90, 90)
-        ax.set_xlabel("Longitude (°)", fontsize=10, color="#aaa")
-        ax.set_ylabel("Latitude (°)",  fontsize=10, color="#aaa")
-        ax.tick_params(colors="#aaa")
-        ax.grid(True, linewidth=0.2, color="#333333", linestyle="--")
+        ax.set_xlabel("Longitude (°)", fontsize=10)
+        ax.set_ylabel("Latitude (°)",  fontsize=10)
+        ax.grid(True, linewidth=0.2, color="#bbbbbb", linestyle="--")
         plot_kw = {}
 
-    fig.patch.set_facecolor("#111111")
+    fig.patch.set_facecolor("white")
 
     sample = next(iter(all_nodes.values()))
     ax.set_title(
         f"Discovered topology  |  {sample.get('topology','?')}  ·  "
         f"{len(all_nodes)} nodes  ·  ISL: {sample.get('isl_profile','?')}\n"
         f"{len(results)}/{len(all_nodes)} nodes reported",
-        fontsize=13, pad=12, color="white",
+        fontsize=13, pad=12,
     )
 
     for edge in declared:
@@ -370,13 +369,13 @@ def plot_topology_map(all_nodes, results, out_path):
         xb, yb = positions[b]
         c = confirmed[edge]
         if c >= 2:
-            color, lw, ls = "#00e676", 1.0, "-"
+            color, lw, ls = "#2ca02c", 1.0, "-"
         elif c == 1:
-            color, lw, ls = "#ff9800", 0.8, "--"
+            color, lw, ls = "#ff7f0e", 0.8, "--"
         else:
-            color, lw, ls = "#ff5252", 0.7, ":"
+            color, lw, ls = "#d62728", 0.7, ":"
         ax.plot([xa, xb], [ya, yb],
-                color=color, lw=lw, linestyle=ls, alpha=0.7, zorder=2, **plot_kw)
+                color=color, lw=lw, linestyle=ls, alpha=0.8, zorder=2, **plot_kw)
 
     for edge in extra_discovered:
         a, b = edge
@@ -385,7 +384,7 @@ def plot_topology_map(all_nodes, results, out_path):
         xa, ya = positions[a]
         xb, yb = positions[b]
         ax.plot([xa, xb], [ya, yb],
-                color="#ce93d8", lw=0.7, linestyle="-.", alpha=0.6, zorder=2, **plot_kw)
+                color="#9467bd", lw=0.7, linestyle="-.", alpha=0.7, zorder=2, **plot_kw)
 
     sat_rep   = [(lon, lat) for n, (lon, lat) in positions.items()
                  if not n.startswith("gnd") and n in results]
@@ -399,38 +398,37 @@ def plot_topology_map(all_nodes, results, out_path):
     scatter_kw = {"zorder": 5, **({"transform": transform} if HAS_CARTOPY else {})}
     if sat_rep:
         ax.scatter([p[0] for p in sat_rep],   [p[1] for p in sat_rep],
-                   s=12, color="#00ccff", **scatter_kw)
+                   s=12, color="#1f77b4", **scatter_kw)
     if sat_norep:
         ax.scatter([p[0] for p in sat_norep], [p[1] for p in sat_norep],
-                   s=12, color="#555555", **scatter_kw)
+                   s=12, color="#aaaaaa", **scatter_kw)
     if gnd_rep:
         ax.scatter([p[0] for p in gnd_rep],   [p[1] for p in gnd_rep],
-                   s=30, color="#ff6b35", marker="^", zorder=6,
+                   s=40, color="#d62728", marker="^", zorder=6,
                    **({"transform": transform} if HAS_CARTOPY else {}))
     if gnd_norep:
         ax.scatter([p[0] for p in gnd_norep], [p[1] for p in gnd_norep],
-                   s=30, color="#555555", marker="^", zorder=6,
+                   s=40, color="#aaaaaa", marker="^", zorder=6,
                    **({"transform": transform} if HAS_CARTOPY else {}))
 
     legend_entries = [
-        mlines.Line2D([], [], color="#00e676", lw=1.2,
+        mlines.Line2D([], [], color="#2ca02c", lw=1.2,
                       label="Confirmed (both directions)"),
-        mlines.Line2D([], [], color="#ff9800", lw=1.0, linestyle="--",
+        mlines.Line2D([], [], color="#ff7f0e", lw=1.0, linestyle="--",
                       label="Partial (one direction)"),
-        mlines.Line2D([], [], color="#ff5252", lw=0.8, linestyle=":",
+        mlines.Line2D([], [], color="#d62728", lw=0.8, linestyle=":",
                       label="Declared but not discovered"),
-        mlines.Line2D([], [], color="#ce93d8", lw=0.8, linestyle="-.",
+        mlines.Line2D([], [], color="#9467bd", lw=0.8, linestyle="-.",
                       label="Discovered but not declared"),
-        mlines.Line2D([], [], color="#00ccff", marker="o", markersize=6,
+        mlines.Line2D([], [], color="#1f77b4", marker="o", markersize=6,
                       linestyle="None", label="Satellite (reported)"),
-        mlines.Line2D([], [], color="#ff6b35", marker="^", markersize=7,
+        mlines.Line2D([], [], color="#d62728", marker="^", markersize=7,
                       linestyle="None", label="Ground station (reported)"),
-        mlines.Line2D([], [], color="#555555", marker="o", markersize=6,
+        mlines.Line2D([], [], color="#aaaaaa", marker="o", markersize=6,
                       linestyle="None", label="Node (no report)"),
     ]
     legend = ax.legend(handles=legend_entries, loc="lower left",
-                       facecolor="#1a1a1a", edgecolor="#555", fontsize=9,
-                       labelcolor="white")
+                       fontsize=9, framealpha=0.9)
 
     total   = len(declared)
     full    = sum(1 for v in confirmed.values() if v >= 2)
@@ -440,10 +438,10 @@ def plot_topology_map(all_nodes, results, out_path):
              f"{partial} partial  ·  {missing} missing"
              + (f"  ·  {len(extra_discovered)} unexpected" if extra_discovered else ""))
     ax.text(0.5, 0.01, stats, transform=ax.transAxes,
-            ha="center", va="bottom", fontsize=9, color="#888")
+            ha="center", va="bottom", fontsize=9, color="#444")
 
     plt.tight_layout()
-    plt.savefig(out_path, dpi=150, bbox_inches="tight",
+    plt.savefig(out_path, dpi=300, bbox_inches="tight",
                 facecolor=fig.get_facecolor())
     plt.close()
     print(f"Saved geographic topology map → {out_path}")
