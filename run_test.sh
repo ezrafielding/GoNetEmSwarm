@@ -96,31 +96,6 @@ cmd_topology() {
         mapfile -t _gnd < <(find_gnd_containers)
         _topo_containers=("${_sat[@]}" "${_gnd[@]}")
     fi
-
-    local expected=${#_topo_containers[@]}
-    local timeout=60
-    local deadline=$((SECONDS + timeout))
-
-    echo "Waiting for $expected discovery file(s) (timeout ${timeout}s)…"
-    while [[ $SECONDS -lt $deadline ]]; do
-        local found
-        found=$(ls "$LOGS_DIR"/*_discovery.json 2>/dev/null | wc -l)
-        if [[ $found -ge $expected ]]; then
-            echo "All $expected file(s) received."
-            break
-        fi
-        echo "  $found/$expected…"
-        sleep 2
-    done
-
-    local found
-    found=$(ls "$LOGS_DIR"/*_discovery.json 2>/dev/null | wc -l)
-    if [[ $found -lt $expected ]]; then
-        echo "WARNING: only $found/$expected files received — plotting with partial data"
-    fi
-
-    echo "Generating topology figure…"
-    python3 "$SCRIPT_DIR/plot_topology.py" "$@"
 }
 
 cmd_fullstart() {
