@@ -14,3 +14,13 @@ docker build \
     -t "$IMAGE" \
     "$SCRIPT_DIR"
 echo "Done: $IMAGE"
+
+IMAGE="gonetem-station:latest"
+
+echo "Building $IMAGE (base: mroy31/gonetem-frr:${GONETEM_VERSION}) …"
+docker build \
+    --build-arg "GONETEM_VERSION=${GONETEM_VERSION}" \
+    -f "$SCRIPT_DIR/Dockerfile.station" \
+    -t "$IMAGE" \
+    "$SCRIPT_DIR"
+echo "Done: $IMAGE"

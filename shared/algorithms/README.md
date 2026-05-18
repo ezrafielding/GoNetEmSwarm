@@ -2,6 +2,20 @@
 
 ## New Stuff :
 
+### Ground Station :
+#### Basic usage :
+use generate_topology.py with the argument --ground_station or -g to generate a topology with a certain number of ground stations.
+use runtest.sh gndstart \[algorithm\] to run an algorithm on ground stations. ground station algorithms need to implements the Ground_Transceiver object.
+if you want to run a scenario using both ground stations and satellitse, you can use run_test.sh fullstart \[algorithm\] and it will run the algorithme named $algorithm"_sat.py" on sat nodes and $algorithm"_gnd.py" on ground station nodes.
+There is an exemple in ground_test(_sat/_gnd).py
+#### Ground Station :
+For now ground station work in the following way:
+Every "self.link_duration: int (seconds)" a new satellite is choosen (among the self.satellite_addr_list list) using the self.get_next_link() method. The default get_next_link implementation is using random.choice, but feel free to override it.
+Whenever the method self.send_unicast(payload: dict) is called, a message with the given payload is send to the currently linked satellite.
+To easily filter messages sent by ground station, they got their own Message\["type"\]: 9
+A list of messages sent by a specific ground station with their local time_stamp can be found in the journal_gnd(id).log file, like satellite.
+For now, ground station are only able to send message, they can't receive anything.
+
 ### Normal Broadcast with tranceiver_tree :
 If you use a tranceiver_tree, you have acess to broadcast thanks to self.send_tree_broadcast(paylod: dict) It works the same way as the reliable broadcast, except it take much less messages.
 But  for Ittowork properly, tree needs to be finished before sending the message (at least locally for the sender node). If tree isn't finished, an UnfinishedTreeException is raised.
@@ -16,7 +30,7 @@ Not really usefull rn, but it is a start for future more complexe message passin
 
 ## Messages :
 Messages are dictionaries with the following items :
-- "type":int (0:Unicast 1:Reliable_Broadcast 2:Simple_Broadcast (only implemented with spaning tree rn) 3-5:Placeholder 6:HeartBeat 7:Ready (6&7 Only used for backend network readyness detection, no use in proper algorithms). 8:Messages related to tree creation)
+- "type":int (0:Unicast 1:Reliable_Broadcast 2:Simple_Broadcast (only implemented with spaning tree rn) 3-5:Placeholder 6:HeartBeat 7:Ready (6&7 Only used for backend network readyness detection, no use in proper algorithms). 8:Messages related to tree creation, 9:Message sent from ground_station to swarm)
 - "sender":str (IP address of the loopback interface of the node from wich the message originated.)
 - "counter":int (message counter for message indentification purpose.)
 - "payload":dict (user defined part of the message, where the data needed for algorithms are stocked)

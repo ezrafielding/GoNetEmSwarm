@@ -201,6 +201,7 @@ def get_edges(n: int, topology: str, **kwargs):
 
 def generate(
     n: int,
+    nb_gnd_station: int,
     topology: str,
     isl_profile: str,
     ospf: bool = True,
@@ -209,7 +210,7 @@ def generate(
     cluster_size: int = 5,
     sparse_distance: int = 2,
     algorithms_dir: str = DEFAULT_ALGORITHMS_DIR,
-    logs_dir: str = DEFAULT_LOGS_DIR,
+    logs_dir: str = DEFAULT_LOGS_DIR
 ):
     """
     Build all artefacts for the .gnet archive.
@@ -223,24 +224,26 @@ def generate(
     edges = get_edges(n, topology, branch=branch, cluster_size=cluster_size,
                       sparse_distance=sparse_distance)
 
+
     # Per-node interface counter and assignment list
-    iface_counter = {nd: 0 for nd in nodes}
-    # node_ifaces[nd] = list of (link_idx, is_peer1, eth_idx)
+    node_iface_counter = {nd: 0 for nd in nodes}
     node_ifaces = {nd: [] for nd in nodes}
+    # node_ifaces[nd] = list of (link_idx, is_peer1, eth_idx)
 
     links_yaml = []
     qos = ISL_PROFILES[isl_profile]
 
+    last_id = 0
     for link_idx, (a, b) in enumerate(edges):
         na, nb = node_name(a), node_name(b)
-        a_eth = iface_counter[na]
-        b_eth = iface_counter[nb]
+        a_eth = node_iface_counter[na]
+        b_eth = node_iface_counter[nb]
 
-        node_ifaces[na].append((link_idx, True,  a_eth))
-        node_ifaces[nb].append((link_idx, False, b_eth))
+        node_ifaces[na].append((link_idx, True,  a_eth, False))
+        node_ifaces[nb].append((link_idx, False, b_eth, False))
 
-        iface_counter[na] += 1
-        iface_counter[nb] += 1
+        node_iface_counter[na] += 1
+        node_iface_counter[nb] += 1
 
         link_entry = {
             "peer1": f"{na}.{a_eth}",
@@ -249,6 +252,8 @@ def generate(
         if qos:
             link_entry.update(qos)
         links_yaml.append(link_entry)
+        last_id = link_idx
+
 
     # ---- network.yml -------------------------------------------------------
     nodes_yaml = {}
@@ -261,6 +266,41 @@ def generate(
                 f"{logs_dir}:/logs",
             ],
         }
+
+    if (nb_gnd_station > 0):
+        station = ["gnd"+str(i) for i in range(1, nb_gnd_station + 1)]
+        gnd_iface_counter = {nd: 0 for nd in station}
+        gnd_ifaces = {nd: [] for nd in station}
+        for id_gnd in range (1, nb_gnd_station + 1):
+            for id_sat in range(1, n + 1):
+                last_id += 1
+                ng, ns = "gnd"+str(id_gnd), node_name(id_sat)
+                gnd_eth = gnd_iface_counter[ng]
+                sat_eth = node_iface_counter[ns]
+
+                gnd_ifaces[ng].append((last_id, True,  gnd_eth, True))
+                node_ifaces[ns].append((last_id, False, sat_eth, True))
+
+                gnd_iface_counter[ng] += 1
+                node_iface_counter[ns] += 1
+
+                link_entry = {
+                    "peer1": f"{ng}.{gnd_eth}",
+                    "peer2": f"{ns}.{sat_eth}",
+                }
+                if qos:
+                    link_entry.update(qos)
+                links_yaml.append(link_entry)
+
+        for sta in station:
+            nodes_yaml[sta] = {
+                "type": "docker.station",
+                "ipv6": False,
+                "volumes": [
+                    f"{algorithms_dir}:/algorithms:ro",
+                    f"{logs_dir}:/logs",
+                ],
+            }
 
     network = {"nodes": nodes_yaml, "links": links_yaml}
     network_yml = yaml.dump(network, default_flow_style=False, sort_keys=False)
@@ -276,13 +316,127 @@ def generate(
         iface_frr_lines = []
         ospf_networks   = [lo_ip]
         neighbors       = []
+        gnd_links       = []
 
-        for (link_idx, is_peer1, eth_idx) in node_ifaces[nd]:
+        for (link_idx, is_peer1, eth_idx, with_gnd) in node_ifaces[nd]:
+            if not with_gnd:
+                subnet, peer1_ip, peer2_ip = link_addresses(link_idx)
+                my_ip      = peer1_ip if is_peer1 else peer2_ip
+                their_ip   = (peer2_ip if is_peer1 else peer1_ip).split("/")[0]
+
+                neighbor_idx = edges[link_idx][1] if is_peer1 else edges[link_idx][0]
+                neighbor_nd  = node_name(neighbor_idx)
+                neighbor_lo  = loopback_ip(neighbor_idx, with_prefix=False)
+
+                neighbors.append({
+                    "name":        neighbor_nd,
+                    "id":          neighbor_idx,
+                    "eth":         eth_idx,
+                    "link_ip":     their_ip,
+                    "loopback_ip": neighbor_lo,
+                })
+
+                iface_frr_lines += [f"interface eth{eth_idx}", f" ip address {my_ip}"]
+                if ospf:
+                    iface_frr_lines += [
+                        " ip ospf network point-to-point",
+                        " ip ospf hello-interval 10",
+                        " ip ospf dead-interval 40",
+                    ]
+                if multicast:
+                    iface_frr_lines.append(" ip pim")
+                iface_frr_lines.append("!")
+                ospf_networks.append(subnet)
+            else:
+                subnet, peer1_ip, peer2_ip = link_addresses(link_idx)
+                my_ip      = peer2_ip
+                their_ip   = peer1_ip.split("/")[0]
+
+                station_idx = len(gnd_links)+1
+                station_ng  = "gnd"+str(station_idx)
+                station_lo  = loopback_ip(station_idx+n, with_prefix=False)
+
+                gnd_links.append({
+                    "name":        station_ng,
+                    "id":          station_idx,
+                    "eth":         eth_idx,
+                    "link_ip":     their_ip,
+                    "my_ip":       my_ip,
+                    "loopback_ip": station_lo,
+                })
+
+                iface_frr_lines += [f"interface eth{eth_idx}", f" ip address {my_ip}"]
+                if ospf:
+                    iface_frr_lines += [
+                        " ip ospf network point-to-point",
+                        " ip ospf hello-interval 10",
+                        " ip ospf dead-interval 40",
+                    ]
+                if multicast:
+                    iface_frr_lines.append(" ip pim")
+                iface_frr_lines.append("!")
+                ospf_networks.append(subnet)
+
+        # Build frr.conf
+        lo_pim_line = [" ip pim"] if multicast else []
+        frr_lines = [
+            "! -*- frr default configuration -*-",
+            "!",
+            "service integrated-vtysh-config",
+            "!",
+            f"hostname {nd}",
+            "!",
+            "interface lo",
+            f" ip address {lo_ip}",
+        ] + lo_pim_line + [
+            "!",
+        ] + iface_frr_lines
+
+        if ospf:
+            frr_lines += [
+                "router ospf",
+                f" ospf router-id {lo_addr}",
+                " passive-interface lo",
+            ]
+            for net in ospf_networks:
+                frr_lines.append(f" network {net} area 0")
+            frr_lines.append("!")
+
+        if multicast:
+            frr_lines += ["ip multicast-routing", "!"]
+
+        frr_lines += ["line vty", "!"]
+        frr_configs[nd] = "\n".join(frr_lines) + "\n"
+
+
+        node_infos[nd] = {
+            "id":                i,
+            "name":              nd,
+            "loopback_ip":       lo_addr,
+            "neighbors":         neighbors,
+            "ground_communication": gnd_links,
+            "ospf_enabled":      ospf,
+            "multicast_enabled": multicast,
+            "multicast_group":   MCAST_GROUP if multicast else None,
+            "multicast_port":    MCAST_PORT  if multicast else None,
+            "isl_profile":       isl_profile,
+            "topology":          topology,
+        }
+
+    for i, ng in enumerate(station, start=1):
+        lo_ip   = loopback_ip(n+i, with_prefix=True)
+        lo_addr = loopback_ip(n+i, with_prefix=False)
+
+        iface_frr_lines = []
+        ospf_networks   = [lo_ip]
+        neighbors       = []
+
+        for (link_idx, is_peer1, eth_idx, with_gnd) in gnd_ifaces[ng]:
             subnet, peer1_ip, peer2_ip = link_addresses(link_idx)
             my_ip      = peer1_ip if is_peer1 else peer2_ip
             their_ip   = (peer2_ip if is_peer1 else peer1_ip).split("/")[0]
 
-            neighbor_idx = edges[link_idx][1] if is_peer1 else edges[link_idx][0]
+            neighbor_idx = len(neighbors)+1
             neighbor_nd  = node_name(neighbor_idx)
             neighbor_lo  = loopback_ip(neighbor_idx, with_prefix=False)
 
@@ -335,11 +489,11 @@ def generate(
             frr_lines += ["ip multicast-routing", "!"]
 
         frr_lines += ["line vty", "!"]
-        frr_configs[nd] = "\n".join(frr_lines) + "\n"
+        frr_configs[ng] = "\n".join(frr_lines) + "\n"
 
-        node_infos[nd] = {
-            "id":                i,
-            "name":              nd,
+        node_infos[ng] = {
+            "id":                i+n,
+            "name":              ng,
             "loopback_ip":       lo_addr,
             "neighbors":         neighbors,
             "ospf_enabled":      ospf,
@@ -347,8 +501,8 @@ def generate(
             "multicast_group":   MCAST_GROUP if multicast else None,
             "multicast_port":    MCAST_PORT  if multicast else None,
             "isl_profile":       isl_profile,
-            "topology":          topology,
         }
+
 
     return network_yml, frr_configs, node_infos
 
@@ -421,6 +575,8 @@ def main():
         help="ISL link emulation profile: leo | geo | deep-space | none (default: leo)")
     parser.add_argument("--output", "-o", default=None,
         help="Output .gnet file path (default: swarm_<topology>_<n>[_noospf].gnet)")
+    parser.add_argument("--ground_station", "-g", type=int, default=0,
+        help="Number of ground station nodes (default: 0)")
 
     ospf_group = parser.add_mutually_exclusive_group()
     ospf_group.add_argument("--ospf", dest="ospf", action="store_true", default=True,
@@ -447,6 +603,7 @@ def main():
 
     args = parser.parse_args()
 
+
     if args.nodes < 2:
         parser.error("--nodes must be at least 2")
     if args.nodes > 255:
@@ -457,13 +614,14 @@ def main():
         mcast_suffix = "_mcast" if args.multicast else ""
         args.output = f"swarm_{args.topology}_{args.nodes}{ospf_suffix}{mcast_suffix}.gnet"
 
-    print(f"Generating {args.topology} topology with {args.nodes} nodes "
+    print(f"Generating {args.topology} topology with {args.nodes} satellite nodes and {args.ground_station} ground stations"
           f"[ISL: {args.isl_profile}] "
           f"[OSPF: {'on' if args.ospf else 'off'}] "
           f"[Multicast: {'on' if args.multicast else 'off'}]")
 
     network_yml, frr_configs, node_infos = generate(
         n=args.nodes,
+        nb_gnd_station=args.ground_station,
         topology=args.topology,
         isl_profile=args.isl_profile,
         ospf=args.ospf,
@@ -472,7 +630,7 @@ def main():
         cluster_size=args.cluster_size,
         sparse_distance=args.sparse_distance,
         algorithms_dir=args.algorithms_dir,
-        logs_dir=args.logs_dir,
+        logs_dir=args.logs_dir
     )
 
     package_gnet(args.output, network_yml, frr_configs, node_infos, args.algorithms_dir)

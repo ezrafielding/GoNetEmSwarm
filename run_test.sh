@@ -44,6 +44,12 @@ find_sat_containers() {
       | sort -V
 }
 
+find_gnd_containers() {
+    docker ps --format "{{.Names}}" \
+      | grep -E '^ntm[^.]+\.gnd[0-9]+$' \
+      | sort -V
+}
+
 # Return the container name for a specific node (e.g. sat3).
 find_container_for_node() {
     local node="$1"
@@ -55,7 +61,12 @@ node_from_container() {
     echo "$1" | grep -oE 'sat[0-9]+$'
 }
 
-# Extract the numeric satellite ID from a node name.
+gnd_from_container() {
+    echo "$1" | grep -oE 'gnd[0-9]+$'
+}
+
+
+# Extract the numeric ID from a node name.
 id_from_node() {
     echo "$1" | grep -oE '[0-9]+$'
 }
@@ -63,6 +74,14 @@ id_from_node() {
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
+
+cmd_fullstart() {
+    local algo_prefix="${1:-}"
+    local wakeup_node="${2:-1}"
+
+    cmd_start $algo_prefix'_sat' $wakeup_node
+    cmd_gndstart $algo_prefix'_gnd' $wakeup_node
+}
 
 cmd_start() {
     local algorithm="${1:-}"
@@ -111,16 +130,76 @@ cmd_start() {
     echo "  $0 status"
 }
 
+cmd_gndstart() {
+    local algorithm="${1:-}"
+    local wakeup_node="${2:-1}"
+
+    [[ -n "$algorithm" ]] || die "Usage: $0 start <algorithm> [wakeup_node]"
+
+    # Resolve script path (try .py first, then bare name)
+    local algo_file
+    if [[ -f "$ALGORITHMS_DIR/${algorithm}.py" ]]; then
+        algo_file="/algorithms/${algorithm}.py"
+    elif [[ -f "$ALGORITHMS_DIR/$algorithm" ]]; then
+        algo_file="/algorithms/$algorithm"
+    else
+        echo "WARNING: ${algorithm}.py not found in $ALGORITHMS_DIR – make sure"
+        echo "         you have copied your algorithm there before running."
+        algo_file="/algorithms/${algorithm}.py"
+    fi
+
+    mapfile -t containers < <(find_gnd_containers)
+    [[ ${#containers[@]} -gt 0 ]] || \
+        die "No ground station containers found. Open a compatible .gnet topology in gonetem first."
+
+    mkdir -p "$LOGS_DIR"
+    echo "Starting '$algorithm' on ${#containers[@]} nodes (wakeup_node=$wakeup_node)…"
+
+    for container in "${containers[@]}"; do
+        local node
+        node="$(gnd_from_container "$container")"
+        local gnd_id
+        gnd_id="$(id_from_node "$node")"
+
+        docker exec -d \
+            -e GND_ID="$gnd_id" \
+            -e GND_NAME="$node" \
+            -e WAKEUP_NODE="$wakeup_node" \
+            -e LOG_DIR="/logs" \
+            -e CONFIG_FILE="/algorithms/node_configs.json" \
+            "$container" \
+            python3 "$algo_file" \
+          && echo "  ✓ $node  ($container)"  \
+          || echo "  ✗ $node  ($container)  [exec failed]"
+    done
+
+    echo ""
+    echo "Algorithm running. Monitor with:"
+    echo "  $0 logs $algorithm"
+    echo "  $0 status"
+}
+
 cmd_stop() {
     mapfile -t containers < <(find_sat_containers)
     [[ ${#containers[@]} -gt 0 ]] || { echo "No satellite containers running."; return; }
 
-    echo "Stopping Python algorithm processes on ${#containers[@]} nodes…"
+    echo "Stopping Python algorithm processes on ${#containers[@]} satellites nodes…"
     for container in "${containers[@]}"; do
         docker exec "$container" \
             pkill -f "python3 /algorithms" 2>/dev/null \
           && echo "  stopped on $(node_from_container "$container")" \
           || echo "  (nothing running on $(node_from_container "$container"))"
+    done
+
+    mapfile -t containers < <(find_gnd_containers)
+    [[ ${#containers[@]} -gt 0 ]] || { echo "No satellite containers running."; return; }
+
+    echo "Stopping Python algorithm processes on ${#containers[@]} ground station nodes…"
+    for container in "${containers[@]}"; do
+        docker exec "$container" \
+            pkill -f "python3 /algorithms" 2>/dev/null \
+          && echo "  stopped on $(gnd_from_container "$container")" \
+          || echo "  (nothing running on $(gnd_from_container "$container"))"
     done
 }
 
@@ -141,6 +220,24 @@ cmd_status() {
                 | awk '{$1=""; print $0}' | xargs || echo "(none)")"
         printf "  %-20s  %-10s  %s\n" "$container" "$node" "$proc"
     done
+
+    mapfile -t containers < <(find_gnd_containers)
+    if [[ ${#containers[@]} -eq 0 ]]; then
+        echo "No ground station containers found."
+        return
+    fi
+
+    echo "Ground station containers (${#containers[@]}):"
+    printf "  %-20s  %-10s  %s\n" "CONTAINER" "NODE" "ALGORITHM RUNNING"
+    for container in "${containers[@]}"; do
+        local node
+        node="$(gnd_from_container "$container")"
+        local proc
+        proc="$(docker exec "$container" pgrep -a -f "python3 /algorithms" 2>/dev/null \
+                | awk '{$1=""; print $0}' | xargs || echo "(none)")"
+        printf "  %-20s  %-10s  %s\n" "$container" "$node" "$proc"
+    done
+
 }
 
 cmd_logs() {
@@ -173,6 +270,7 @@ cmd_clean() {
     rm -f "$LOGS_DIR"/*.json 2>/dev/null || true
     rm -f "$LOGS_DIR"/*.csv 2>/dev/null || true
     rm -f "$LOGS_DIR"/network/*.log  2>/dev/null || true
+    rm -f "$LOGS_DIR"/*.json 2>/dev/null || true #"$LOGS_DIR"/*.json
     echo "Done."
 }
 
@@ -205,6 +303,8 @@ shift || true
 
 case "$COMMAND" in
     start)      cmd_start "$@" ;;
+    gndstart)   cmd_gndstart "$@" ;;
+    fullstart)  cmd_fullstart "$@" ;;
     stop)       cmd_stop ;;
     status)     cmd_status ;;
     logs)       cmd_logs "$@" ;;

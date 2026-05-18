@@ -42,3 +42,22 @@ docker:
     - destSuffix: frr.conf
       source: /etc/frr/frr.conf
       label: FRR
+  - type: station
+    image: gonetem-station:latest
+    options:
+      log: false
+      tso: true
+    commands:
+      console: /usr/bin/vtysh
+      shell: /bin/bash
+      loadConfig:
+      - command: /usr/lib/frr/frrinit.sh start
+        checkFiles: []
+      saveConfig:
+      - command: vtysh -w
+        checkFiles: []
+    configurationFiles:
+    - destSuffix: frr.conf
+      source: /etc/frr/frr.conf
+      label: FRR
+
