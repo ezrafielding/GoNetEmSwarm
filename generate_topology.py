@@ -579,10 +579,10 @@ def main():
         help="Number of ground station nodes (default: 0)")
 
     ospf_group = parser.add_mutually_exclusive_group()
-    ospf_group.add_argument("--ospf", dest="ospf", action="store_true", default=True,
-        help="Enable OSPF routing – full reachability across the topology (default)")
+    ospf_group.add_argument("--ospf", dest="ospf", action="store_true", default=False,
+        help="Enable OSPF routing – full reachability across the topology")
     ospf_group.add_argument("--no-ospf", dest="ospf", action="store_false",
-        help="Disable OSPF – nodes can only reach directly-connected neighbours")
+        help="Disable OSPF – nodes can only reach directly-connected neighbours (default)")
 
     mcast_group = parser.add_mutually_exclusive_group()
     mcast_group.add_argument("--multicast", dest="multicast", action="store_true", default=False,
@@ -610,7 +610,7 @@ def main():
         parser.error("--nodes must be ≤ 255 (loopback IP space)")
 
     if args.output is None:
-        ospf_suffix  = "" if args.ospf      else "_noospf"
+        ospf_suffix  = "_ospf" if args.ospf else ""
         mcast_suffix = "_mcast" if args.multicast else ""
         args.output = f"swarm_{args.topology}_{args.nodes}{ospf_suffix}{mcast_suffix}.gnet"
 
