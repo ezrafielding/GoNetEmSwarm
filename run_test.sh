@@ -3,15 +3,20 @@
 #               in a running gonetem topology.
 #
 # Usage:
-#   ./run_test.sh start <algorithm> [args...]
+#   ./run_test.sh start     <algorithm> [args...]   – satellites only
+#   ./run_test.sh gndstart  <algorithm> [args...]   – ground stations only
+#   ./run_test.sh fullstart <algorithm> [args...]   – all nodes (sat + gnd)
+#   ./run_test.sh topology  [--isl-only]            – run discovery + generate figure
 #   ./run_test.sh stop
 #   ./run_test.sh status
 #   ./run_test.sh logs [algorithm]
 #   ./run_test.sh clean
 #
 # Examples:
-#   ./run_test.sh start crdt_ssa
-#   ./run_test.sh start crdt_ssa --ground sat3
+#   ./run_test.sh fullstart crdt_ssa                  # gnd1 is ground by default
+#   ./run_test.sh fullstart crdt_ssa --ground gnd2    # override ground node
+#   ./run_test.sh topology                            # full discovery + figure
+#   ./run_test.sh topology --isl-only                 # satellites only
 #   ./run_test.sh stop
 #   ./run_test.sh logs crdt_ssa
 #
@@ -75,12 +80,56 @@ id_from_node() {
 # Commands
 # ---------------------------------------------------------------------------
 
-cmd_fullstart() {
-    local algo_prefix="${1:-}"
-    local wakeup_node="${2:-1}"
+cmd_topology() {
+    local isl_only=false
+    for arg in "$@"; do
+        [[ "$arg" == "--isl-only" ]] && isl_only=true
+    done
 
-    cmd_start $algo_prefix'_sat' $wakeup_node
-    cmd_gndstart $algo_prefix'_gnd' $wakeup_node
+    # Start discovery on the right set of containers
+    if $isl_only; then
+        cmd_start "topology_discovery" "$@"
+        mapfile -t _topo_containers < <(find_sat_containers)
+    else
+        cmd_fullstart "topology_discovery" "$@"
+        mapfile -t _sat < <(find_sat_containers)
+        mapfile -t _gnd < <(find_gnd_containers)
+        _topo_containers=("${_sat[@]}" "${_gnd[@]}")
+    fi
+
+    local expected=${#_topo_containers[@]}
+    local timeout=60
+    local deadline=$((SECONDS + timeout))
+
+    echo "Waiting for $expected discovery file(s) (timeout ${timeout}s)…"
+    while [[ $SECONDS -lt $deadline ]]; do
+        local found
+        found=$(ls "$LOGS_DIR"/*_discovery.json 2>/dev/null | wc -l)
+        if [[ $found -ge $expected ]]; then
+            echo "All $expected file(s) received."
+            break
+        fi
+        echo "  $found/$expected…"
+        sleep 2
+    done
+
+    local found
+    found=$(ls "$LOGS_DIR"/*_discovery.json 2>/dev/null | wc -l)
+    if [[ $found -lt $expected ]]; then
+        echo "WARNING: only $found/$expected files received — plotting with partial data"
+    fi
+
+    echo "Generating topology figure…"
+    python3 "$SCRIPT_DIR/plot_topology.py" "$@"
+}
+
+cmd_fullstart() {
+    local algorithm="${1:-}"
+    [[ -n "$algorithm" ]] || die "Usage: $0 fullstart <algorithm> [args...]"
+    shift
+
+    cmd_start    "$algorithm" "$@"
+    cmd_gndstart "$algorithm" "$@"
 }
 
 cmd_start() {
@@ -132,9 +181,8 @@ cmd_start() {
 
 cmd_gndstart() {
     local algorithm="${1:-}"
-    local wakeup_node="${2:-1}"
-
-    [[ -n "$algorithm" ]] || die "Usage: $0 start <algorithm> [wakeup_node]"
+    [[ -n "$algorithm" ]] || die "Usage: $0 gndstart <algorithm> [args...]"
+    shift
 
     # Resolve script path (try .py first, then bare name)
     local algo_file
@@ -153,7 +201,7 @@ cmd_gndstart() {
         die "No ground station containers found. Open a compatible .gnet topology in gonetem first."
 
     mkdir -p "$LOGS_DIR"
-    echo "Starting '$algorithm' on ${#containers[@]} nodes (wakeup_node=$wakeup_node)…"
+    echo "Starting '$algorithm' on ${#containers[@]} ground station nodes${*:+ (args: $*)}…"
 
     for container in "${containers[@]}"; do
         local node
@@ -164,11 +212,10 @@ cmd_gndstart() {
         docker exec -d \
             -e GND_ID="$gnd_id" \
             -e GND_NAME="$node" \
-            -e WAKEUP_NODE="$wakeup_node" \
             -e LOG_DIR="/logs" \
             -e CONFIG_FILE="/algorithms/node_configs.json" \
             "$container" \
-            python3 "$algo_file" \
+            python3 "$algo_file" "$@" \
           && echo "  ✓ $node  ($container)"  \
           || echo "  ✗ $node  ($container)  [exec failed]"
     done
@@ -305,6 +352,7 @@ case "$COMMAND" in
     start)      cmd_start "$@" ;;
     gndstart)   cmd_gndstart "$@" ;;
     fullstart)  cmd_fullstart "$@" ;;
+    topology)   cmd_topology "$@" ;;
     stop)       cmd_stop ;;
     status)     cmd_status ;;
     logs)       cmd_logs "$@" ;;

@@ -1,0 +1,3177 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {
+    "current_simulation_date": "2024-01-01 00:00:00.000",
+    "simulation_configuration": {
+      "properties": {
+        "start_date": "01/01/2024 00:00:00",
+        "end_date": "01/01/2024 00:01:00",
+        "simulation_name": "Iridium",
+        "movement_model": "pyorbital",
+        "distance_model": "sklearn",
+        "ground_objects_properties": [
+          {
+            "identifier": "Ground Stations",
+            "data_file": "/tmp/iridium_topology_ground_files/ground_stations.txt",
+            "type": "ground_station",
+            "connectivity_properties": {
+              "elevation_above_horizon": 10.0,
+              "maximum_satellite_range_distance": 1500.0,
+              "shell_white_lists": [
+                "LEO"
+              ],
+              "maximum_connected_satellites": 3,
+              "ground_to_space_connections_strategy": "everything-visible"
+            }
+          }
+        ],
+        "walker_shells": [
+          {
+            "type": "star",
+            "constellation_property": {
+              "identifier": "LEO",
+              "amount_of_orbit_plane": 6,
+              "amount_of_satellite_per_orbit_plane": 11,
+              "inclination": 86.4,
+              "phase_difference_between_satellites": true,
+              "mean_revolution_per_day": 14.36
+            },
+            "orbital_connectivity_property": {
+              "maximum_inter_satellite_count": 4,
+              "adjacent_inter_satellite_shifting": 0,
+              "maximum_inter_satellite_range_distance": 1500.0,
+              "maximum_ground_station_range": 1200.0,
+              "maximum_user_terminal_range": 1000.0,
+              "maximum_connected_ground_object": 10000,
+              "maximum_connected_user_terminal": 500,
+              "maximum_connected_ground_station": 10
+            },
+            "ground_object_white_list": [
+              "Ground Stations"
+            ]
+          }
+        ],
+        "disable_ground_station_link_preload": false,
+        "static_ground_station_link_mode": false,
+        "ground_connectivity_properties": []
+      }
+    }
+  },
+  "nodes": [
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -168.20215297406978,
+        "latitude": 40.83239631664031,
+        "altitude": 777682.3952207137
+      },
+      "type": "Satellite",
+      "object_id": 0,
+      "topology_uniq_id": 0,
+      "id": 0
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -159.2936072884302,
+        "latitude": 73.25949318712841,
+        "altitude": 784000.3215637141
+      },
+      "type": "Satellite",
+      "object_id": 1,
+      "topology_uniq_id": 1,
+      "id": 1
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": -3.4007534335306673,
+        "latitude": 73.37529305248066,
+        "altitude": 783769.1804805336
+      },
+      "type": "Satellite",
+      "object_id": 2,
+      "topology_uniq_id": 2,
+      "id": 2
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 5.585144080988755,
+        "latitude": 40.94700691810372,
+        "altitude": 777044.13192094
+      },
+      "type": "Satellite",
+      "object_id": 3,
+      "topology_uniq_id": 3,
+      "id": 3
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 8.184800662657636,
+        "latitude": 8.14173564602349,
+        "altitude": 773595.4701722391
+      },
+      "type": "Satellite",
+      "object_id": 4,
+      "topology_uniq_id": 4,
+      "id": 4
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 10.346854255936279,
+        "latitude": -24.695326413698627,
+        "altitude": 780922.9818957528
+      },
+      "type": "Satellite",
+      "object_id": 5,
+      "topology_uniq_id": 5,
+      "id": 5
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 14.287800495060225,
+        "latitude": -57.28096550455254,
+        "altitude": 794256.6677770532
+      },
+      "type": "Satellite",
+      "object_id": 6,
+      "topology_uniq_id": 6,
+      "id": 6
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 97.97079747583791,
+        "latitude": -86.4187061329423,
+        "altitude": 801071.4015174913
+      },
+      "type": "Satellite",
+      "object_id": 7,
+      "topology_uniq_id": 7,
+      "id": 7
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -176.91223719750957,
+        "latitude": -57.37362138721573,
+        "altitude": 794764.512961223
+      },
+      "type": "Satellite",
+      "object_id": 8,
+      "topology_uniq_id": 8,
+      "id": 8
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -172.95886834401676,
+        "latitude": -24.795069356125467,
+        "altitude": 781756.9374750659
+      },
+      "type": "Satellite",
+      "object_id": 9,
+      "topology_uniq_id": 9,
+      "id": 9
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -170.79613640936776,
+        "latitude": 8.03375294124243,
+        "altitude": 774468.2597586721
+      },
+      "type": "Satellite",
+      "object_id": 10,
+      "topology_uniq_id": 10,
+      "id": 10
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -135.80365073408115,
+        "latitude": 24.454876612492274,
+        "altitude": 775001.3574421437
+      },
+      "type": "Satellite",
+      "object_id": 11,
+      "topology_uniq_id": 11,
+      "id": 11
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -131.87660689314134,
+        "latitude": 57.131405537832165,
+        "altitude": 781178.5607538193
+      },
+      "type": "Satellite",
+      "object_id": 12,
+      "topology_uniq_id": 12,
+      "id": 12
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -48.38928547878885,
+        "latitude": 86.41853972912733,
+        "altitude": 785004.6276954584
+      },
+      "type": "Satellite",
+      "object_id": 13,
+      "topology_uniq_id": 13,
+      "id": 13
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 36.98260945928075,
+        "latitude": 57.24796992335612,
+        "altitude": 780729.8833651611
+      },
+      "type": "Satellite",
+      "object_id": 14,
+      "topology_uniq_id": 14,
+      "id": 14
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 40.92616505362878,
+        "latitude": 24.566616044789267,
+        "altitude": 774216.8325436933
+      },
+      "type": "Satellite",
+      "object_id": 15,
+      "topology_uniq_id": 15,
+      "id": 15
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 43.08803489879065,
+        "latitude": -8.291576095388624,
+        "altitude": 775895.7497486543
+      },
+      "type": "Satellite",
+      "object_id": 16,
+      "topology_uniq_id": 16,
+      "id": 16
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 45.687885848920644,
+        "latitude": -41.035518095442065,
+        "altitude": 787594.6035323065
+      },
+      "type": "Satellite",
+      "object_id": 17,
+      "topology_uniq_id": 17,
+      "id": 17
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 54.63898167649751,
+        "latitude": -73.34298942028444,
+        "altitude": 799179.9882683811
+      },
+      "type": "Satellite",
+      "object_id": 18,
+      "topology_uniq_id": 18,
+      "id": 18
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -149.57790745678838,
+        "latitude": -73.43223436596881,
+        "altitude": 799446.2188886133
+      },
+      "type": "Satellite",
+      "object_id": 19,
+      "topology_uniq_id": 19,
+      "id": 19
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -140.56751442563575,
+        "latitude": -41.13151489036567,
+        "altitude": 788297.4359994768
+      },
+      "type": "Satellite",
+      "object_id": 20,
+      "topology_uniq_id": 20,
+      "id": 20
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -137.9637187025326,
+        "latitude": -8.395543045383603,
+        "altitude": 776786.9957279233
+      },
+      "type": "Satellite",
+      "object_id": 21,
+      "topology_uniq_id": 21,
+      "id": 21
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -100.46676599409909,
+        "latitude": 40.83232218793068,
+        "altitude": 777682.3678765156
+      },
+      "type": "Satellite",
+      "object_id": 22,
+      "topology_uniq_id": 22,
+      "id": 22
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -91.55829467873639,
+        "latitude": 73.2594227162837,
+        "altitude": 784000.306960969
+      },
+      "type": "Satellite",
+      "object_id": 23,
+      "topology_uniq_id": 23,
+      "id": 23
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 64.33463061918172,
+        "latitude": 73.3753681230303,
+        "altitude": 783769.1959414439
+      },
+      "type": "Satellite",
+      "object_id": 24,
+      "topology_uniq_id": 24,
+      "id": 24
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 73.32055016387454,
+        "latitude": 40.94708225139998,
+        "altitude": 777044.1597264066
+      },
+      "type": "Satellite",
+      "object_id": 25,
+      "topology_uniq_id": 25,
+      "id": 25
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 75.92020215003072,
+        "latitude": 8.141810949318527,
+        "altitude": 773595.477994919
+      },
+      "type": "Satellite",
+      "object_id": 26,
+      "topology_uniq_id": 26,
+      "id": 26
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 78.08224818698602,
+        "latitude": -24.69525169916188,
+        "altitude": 780922.9608311024
+      },
+      "type": "Satellite",
+      "object_id": 27,
+      "topology_uniq_id": 27,
+      "id": 27
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 82.02317208695547,
+        "latitude": -57.28089235050461,
+        "altitude": 794256.642865245
+      },
+      "type": "Satellite",
+      "object_id": 28,
+      "topology_uniq_id": 28,
+      "id": 28
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 165.70500769476712,
+        "latitude": -86.41871625189715,
+        "altitude": 801071.4019919736
+      },
+      "type": "Satellite",
+      "object_id": 29,
+      "topology_uniq_id": 29,
+      "id": 29
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -109.1768313492627,
+        "latitude": -57.3736967041349,
+        "altitude": 794764.5385720596
+      },
+      "type": "Satellite",
+      "object_id": 30,
+      "topology_uniq_id": 30,
+      "id": 30
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -105.22346422820956,
+        "latitude": -24.795144713690828,
+        "altitude": 781756.9587847834
+      },
+      "type": "Satellite",
+      "object_id": 31,
+      "topology_uniq_id": 31,
+      "id": 31
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -103.06073806350145,
+        "latitude": 8.033677836535828,
+        "altitude": 774468.2520574871
+      },
+      "type": "Satellite",
+      "object_id": 32,
+      "topology_uniq_id": 32,
+      "id": 32
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -68.06827445869442,
+        "latitude": 24.454821983586907,
+        "altitude": 775001.3421526954
+      },
+      "type": "Satellite",
+      "object_id": 33,
+      "topology_uniq_id": 33,
+      "id": 33
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -64.14129317271761,
+        "latitude": 57.1313549697955,
+        "altitude": 781178.5434932547
+      },
+      "type": "Satellite",
+      "object_id": 34,
+      "topology_uniq_id": 34,
+      "id": 34
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": 19.34521359640442,
+        "latitude": 86.41858940575794,
+        "altitude": 785004.6300249823
+      },
+      "type": "Satellite",
+      "object_id": 35,
+      "topology_uniq_id": 35,
+      "id": 35
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 104.71807935642937,
+        "latitude": 57.24803034714811,
+        "altitude": 780729.903952433
+      },
+      "type": "Satellite",
+      "object_id": 36,
+      "topology_uniq_id": 36,
+      "id": 36
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 108.66158745170407,
+        "latitude": 24.56667358929938,
+        "altitude": 774216.8487042137
+      },
+      "type": "Satellite",
+      "object_id": 37,
+      "topology_uniq_id": 37,
+      "id": 37
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 110.82342745001165,
+        "latitude": -8.29152035750643,
+        "altitude": 775895.7438546555
+      },
+      "type": "Satellite",
+      "object_id": 38,
+      "topology_uniq_id": 38,
+      "id": 38
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 113.42323923297056,
+        "latitude": -41.03546502160022,
+        "altitude": 787594.5839336516
+      },
+      "type": "Satellite",
+      "object_id": 39,
+      "topology_uniq_id": 39,
+      "id": 39
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 122.37417743531614,
+        "latitude": -73.34294563842084,
+        "altitude": 799179.9792359949
+      },
+      "type": "Satellite",
+      "object_id": 40,
+      "topology_uniq_id": 40,
+      "id": 40
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -81.84238043273655,
+        "latitude": -73.43229938505627,
+        "altitude": 799446.2322387964
+      },
+      "type": "Satellite",
+      "object_id": 41,
+      "topology_uniq_id": 41,
+      "id": 41
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -72.83207294636782,
+        "latitude": -41.13157352264287,
+        "altitude": 788297.4576612322
+      },
+      "type": "Satellite",
+      "object_id": 42,
+      "topology_uniq_id": 42,
+      "id": 42
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -70.22831130963885,
+        "latitude": -8.395599722722212,
+        "altitude": 776787.0017943524
+      },
+      "type": "Satellite",
+      "object_id": 43,
+      "topology_uniq_id": 43,
+      "id": 43
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -32.73142980431243,
+        "latitude": 40.832308140384214,
+        "altitude": 777682.3626948402
+      },
+      "type": "Satellite",
+      "object_id": 44,
+      "topology_uniq_id": 44,
+      "id": 44
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -23.823144392651898,
+        "latitude": 73.25942036532258,
+        "altitude": 784000.3064738679
+      },
+      "type": "Satellite",
+      "object_id": 45,
+      "topology_uniq_id": 45,
+      "id": 45
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 132.07025702526016,
+        "latitude": 73.37540097717435,
+        "altitude": 783769.2027077646
+      },
+      "type": "Satellite",
+      "object_id": 46,
+      "topology_uniq_id": 46,
+      "id": 46
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 141.05601254643784,
+        "latitude": 40.947104261855564,
+        "altitude": 777044.1678503648
+      },
+      "type": "Satellite",
+      "object_id": 47,
+      "topology_uniq_id": 47,
+      "id": 47
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 143.6556125671936,
+        "latitude": 8.141829745525234,
+        "altitude": 773595.479947429
+      },
+      "type": "Satellite",
+      "object_id": 48,
+      "topology_uniq_id": 48,
+      "id": 48
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 145.81761440471553,
+        "latitude": -24.69523572528881,
+        "altitude": 780922.9563274567
+      },
+      "type": "Satellite",
+      "object_id": 49,
+      "topology_uniq_id": 49,
+      "id": 49
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 149.758456316388,
+        "latitude": -57.280881582358084,
+        "altitude": 794256.6391982415
+      },
+      "type": "Satellite",
+      "object_id": 50,
+      "topology_uniq_id": 50,
+      "id": 50
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": -126.55989350361801,
+        "latitude": -86.41878900085376,
+        "altitude": 801071.4054032102
+      },
+      "type": "Satellite",
+      "object_id": 51,
+      "topology_uniq_id": 51,
+      "id": 51
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -41.441320633726775,
+        "latitude": -57.37372176399396,
+        "altitude": 794764.5470934416
+      },
+      "type": "Satellite",
+      "object_id": 52,
+      "topology_uniq_id": 52,
+      "id": 52
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -37.48803076857098,
+        "latitude": -24.795164938866257,
+        "altitude": 781756.9645041443
+      },
+      "type": "Satellite",
+      "object_id": 53,
+      "topology_uniq_id": 53,
+      "id": 53
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -35.32534838563322,
+        "latitude": 8.033660353484922,
+        "altitude": 774468.2502648901
+      },
+      "type": "Satellite",
+      "object_id": 54,
+      "topology_uniq_id": 54,
+      "id": 54
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -0.3329062117525723,
+        "latitude": 24.454850044902606,
+        "altitude": 775001.3500066572
+      },
+      "type": "Satellite",
+      "object_id": 55,
+      "topology_uniq_id": 55,
+      "id": 55
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": 3.5940019682234947,
+        "latitude": 57.13138758549367,
+        "altitude": 781178.554626261
+      },
+      "type": "Satellite",
+      "object_id": 56,
+      "topology_uniq_id": 56,
+      "id": 56
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": 87.08100672603416,
+        "latitude": 86.41866041349357,
+        "altitude": 785004.6333547471
+      },
+      "type": "Satellite",
+      "object_id": 57,
+      "topology_uniq_id": 57,
+      "id": 57
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 172.45359246236126,
+        "latitude": 57.24801148412856,
+        "altitude": 780729.8975254014
+      },
+      "type": "Satellite",
+      "object_id": 58,
+      "topology_uniq_id": 58,
+      "id": 58
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 176.39702004170124,
+        "latitude": 24.566649596654614,
+        "altitude": 774216.8419660435
+      },
+      "type": "Satellite",
+      "object_id": 59,
+      "topology_uniq_id": 59,
+      "id": 59
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": 178.55881719820468,
+        "latitude": -8.29154709762515,
+        "altitude": 775895.7466821357
+      },
+      "type": "Satellite",
+      "object_id": 60,
+      "topology_uniq_id": 60,
+      "id": 60
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": -178.84142088839553,
+        "latitude": -41.03549481619762,
+        "altitude": 787594.5949358712
+      },
+      "type": "Satellite",
+      "object_id": 61,
+      "topology_uniq_id": 61,
+      "id": 61
+    },
+    {
+      "orbital_phase": "descending",
+      "position": {
+        "longitude": -169.89063523505848,
+        "latitude": -73.34298565730465,
+        "altitude": 799179.9874920354
+      },
+      "type": "Satellite",
+      "object_id": 62,
+      "topology_uniq_id": 62,
+      "id": 62
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -14.106730247300163,
+        "latitude": -73.43228901358161,
+        "altitude": 799446.2301092591
+      },
+      "type": "Satellite",
+      "object_id": 63,
+      "topology_uniq_id": 63,
+      "id": 63
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -5.0966101645256,
+        "latitude": -41.131551483605215,
+        "altitude": 788297.4495189387
+      },
+      "type": "Satellite",
+      "object_id": 64,
+      "topology_uniq_id": 64,
+      "id": 64
+    },
+    {
+      "orbital_phase": "ascending",
+      "position": {
+        "longitude": -2.492900857653126,
+        "latitude": -8.395574293714898,
+        "altitude": 776786.9990727073
+      },
+      "type": "Satellite",
+      "object_id": 65,
+      "topology_uniq_id": 65,
+      "id": 65
+    },
+    {
+      "label": "Berlin",
+      "position": {
+        "longitude": 13.405,
+        "latitude": 52.52,
+        "altitude": 0.034
+      },
+      "type": "GroundStation",
+      "object_id": 0,
+      "topology_uniq_id": 66,
+      "id": 66
+    },
+    {
+      "label": "London",
+      "position": {
+        "longitude": -0.1278,
+        "latitude": 51.5074,
+        "altitude": 0.011
+      },
+      "type": "GroundStation",
+      "object_id": 1,
+      "topology_uniq_id": 67,
+      "id": 67
+    },
+    {
+      "label": "Paris",
+      "position": {
+        "longitude": 2.3522,
+        "latitude": 48.8566,
+        "altitude": 0.035
+      },
+      "type": "GroundStation",
+      "object_id": 2,
+      "topology_uniq_id": 68,
+      "id": 68
+    },
+    {
+      "label": "Rome",
+      "position": {
+        "longitude": 12.4964,
+        "latitude": 41.9028,
+        "altitude": 0.021
+      },
+      "type": "GroundStation",
+      "object_id": 3,
+      "topology_uniq_id": 69,
+      "id": 69
+    },
+    {
+      "label": "Madrid",
+      "position": {
+        "longitude": -3.7038,
+        "latitude": 40.4168,
+        "altitude": 0.667
+      },
+      "type": "GroundStation",
+      "object_id": 4,
+      "topology_uniq_id": 70,
+      "id": 70
+    },
+    {
+      "label": "Ankara",
+      "position": {
+        "longitude": 32.8541,
+        "latitude": 39.9208,
+        "altitude": 0.938
+      },
+      "type": "GroundStation",
+      "object_id": 5,
+      "topology_uniq_id": 71,
+      "id": 71
+    },
+    {
+      "label": "Amsterdam",
+      "position": {
+        "longitude": 4.9041,
+        "latitude": 52.3676,
+        "altitude": 0.002
+      },
+      "type": "GroundStation",
+      "object_id": 6,
+      "topology_uniq_id": 72,
+      "id": 72
+    },
+    {
+      "label": "Warsaw",
+      "position": {
+        "longitude": 21.0122,
+        "latitude": 52.2297,
+        "altitude": 0.1
+      },
+      "type": "GroundStation",
+      "object_id": 7,
+      "topology_uniq_id": 73,
+      "id": 73
+    },
+    {
+      "label": "Bern",
+      "position": {
+        "longitude": 7.4474,
+        "latitude": 46.948,
+        "altitude": 0.54
+      },
+      "type": "GroundStation",
+      "object_id": 8,
+      "topology_uniq_id": 74,
+      "id": 74
+    },
+    {
+      "label": "Brussels",
+      "position": {
+        "longitude": 4.3517,
+        "latitude": 50.8503,
+        "altitude": 0.013
+      },
+      "type": "GroundStation",
+      "object_id": 9,
+      "topology_uniq_id": 75,
+      "id": 75
+    },
+    {
+      "label": "Stockholm",
+      "position": {
+        "longitude": 18.0686,
+        "latitude": 59.3293,
+        "altitude": 0.028
+      },
+      "type": "GroundStation",
+      "object_id": 10,
+      "topology_uniq_id": 76,
+      "id": 76
+    },
+    {
+      "label": "Dublin",
+      "position": {
+        "longitude": -6.2603,
+        "latitude": 53.3498,
+        "altitude": 0.02
+      },
+      "type": "GroundStation",
+      "object_id": 11,
+      "topology_uniq_id": 77,
+      "id": 77
+    },
+    {
+      "label": "Vienna",
+      "position": {
+        "longitude": 16.3738,
+        "latitude": 48.2082,
+        "altitude": 0.171
+      },
+      "type": "GroundStation",
+      "object_id": 12,
+      "topology_uniq_id": 78,
+      "id": 78
+    },
+    {
+      "label": "Oslo",
+      "position": {
+        "longitude": 10.7522,
+        "latitude": 59.9139,
+        "altitude": 0.023
+      },
+      "type": "GroundStation",
+      "object_id": 13,
+      "topology_uniq_id": 79,
+      "id": 79
+    },
+    {
+      "label": "Fairbanks",
+      "position": {
+        "longitude": -147.7164,
+        "latitude": 64.8378,
+        "altitude": 0.136
+      },
+      "type": "GroundStation",
+      "object_id": 14,
+      "topology_uniq_id": 80,
+      "id": 80
+    },
+    {
+      "label": "Honolulu",
+      "position": {
+        "longitude": -157.8583,
+        "latitude": 21.3069,
+        "altitude": 0.01
+      },
+      "type": "GroundStation",
+      "object_id": 15,
+      "topology_uniq_id": 81,
+      "id": 81
+    },
+    {
+      "label": "Los Angeles",
+      "position": {
+        "longitude": -118.2437,
+        "latitude": 34.0522,
+        "altitude": 0.071
+      },
+      "type": "GroundStation",
+      "object_id": 16,
+      "topology_uniq_id": 82,
+      "id": 82
+    },
+    {
+      "label": "Bras\u00edlia",
+      "position": {
+        "longitude": -47.8828,
+        "latitude": -15.7939,
+        "altitude": 1.172
+      },
+      "type": "GroundStation",
+      "object_id": 17,
+      "topology_uniq_id": 83,
+      "id": 83
+    },
+    {
+      "label": "Longyearbyen",
+      "position": {
+        "longitude": 15.6469,
+        "latitude": 78.2232,
+        "altitude": 0.033
+      },
+      "type": "GroundStation",
+      "object_id": 18,
+      "topology_uniq_id": 84,
+      "id": 84
+    },
+    {
+      "label": "Frankfurt",
+      "position": {
+        "longitude": 8.6821,
+        "latitude": 50.1109,
+        "altitude": 0.112
+      },
+      "type": "GroundStation",
+      "object_id": 19,
+      "topology_uniq_id": 85,
+      "id": 85
+    },
+    {
+      "label": "Nairobi",
+      "position": {
+        "longitude": 36.8219,
+        "latitude": -1.2921,
+        "altitude": 1.795
+      },
+      "type": "GroundStation",
+      "object_id": 20,
+      "topology_uniq_id": 86,
+      "id": 86
+    },
+    {
+      "label": "Dubai",
+      "position": {
+        "longitude": 55.2708,
+        "latitude": 25.2048,
+        "altitude": 0.016
+      },
+      "type": "GroundStation",
+      "object_id": 21,
+      "topology_uniq_id": 87,
+      "id": 87
+    },
+    {
+      "label": "Tokyo",
+      "position": {
+        "longitude": 139.6503,
+        "latitude": 35.6762,
+        "altitude": 0.04
+      },
+      "type": "GroundStation",
+      "object_id": 22,
+      "topology_uniq_id": 88,
+      "id": 88
+    },
+    {
+      "label": "Singapore",
+      "position": {
+        "longitude": 103.8198,
+        "latitude": 1.3521,
+        "altitude": 0.015
+      },
+      "type": "GroundStation",
+      "object_id": 23,
+      "topology_uniq_id": 89,
+      "id": 89
+    },
+    {
+      "label": "Perth",
+      "position": {
+        "longitude": 115.8605,
+        "latitude": -31.9505,
+        "altitude": 0.031
+      },
+      "type": "GroundStation",
+      "object_id": 24,
+      "topology_uniq_id": 90,
+      "id": 90
+    },
+    {
+      "label": "McMurdo Station",
+      "position": {
+        "longitude": 166.6863,
+        "latitude": -77.8419,
+        "altitude": 0.01
+      },
+      "type": "GroundStation",
+      "object_id": 25,
+      "topology_uniq_id": 91,
+      "id": 91
+    },
+    {
+      "label": "New York",
+      "position": {
+        "longitude": -74.006,
+        "latitude": 40.7128,
+        "altitude": 0.01
+      },
+      "type": "GroundStation",
+      "object_id": 26,
+      "topology_uniq_id": 92,
+      "id": 92
+    },
+    {
+      "label": "Miami",
+      "position": {
+        "longitude": -80.1918,
+        "latitude": 25.7617,
+        "altitude": 0.002
+      },
+      "type": "GroundStation",
+      "object_id": 27,
+      "topology_uniq_id": 93,
+      "id": 93
+    },
+    {
+      "label": "Chicago",
+      "position": {
+        "longitude": -87.6298,
+        "latitude": 41.8781,
+        "altitude": 0.181
+      },
+      "type": "GroundStation",
+      "object_id": 28,
+      "topology_uniq_id": 94,
+      "id": 94
+    },
+    {
+      "label": "Seattle",
+      "position": {
+        "longitude": -122.3321,
+        "latitude": 47.6062,
+        "altitude": 0.056
+      },
+      "type": "GroundStation",
+      "object_id": 29,
+      "topology_uniq_id": 95,
+      "id": 95
+    },
+    {
+      "label": "Houston",
+      "position": {
+        "longitude": -95.3698,
+        "latitude": 29.7604,
+        "altitude": 0.013
+      },
+      "type": "GroundStation",
+      "object_id": 30,
+      "topology_uniq_id": 96,
+      "id": 96
+    },
+    {
+      "label": "Beijing",
+      "position": {
+        "longitude": 116.4074,
+        "latitude": 39.9042,
+        "altitude": 0.043
+      },
+      "type": "GroundStation",
+      "object_id": 31,
+      "topology_uniq_id": 97,
+      "id": 97
+    },
+    {
+      "label": "Shanghai",
+      "position": {
+        "longitude": 121.4737,
+        "latitude": 31.2304,
+        "altitude": 0.004
+      },
+      "type": "GroundStation",
+      "object_id": 32,
+      "topology_uniq_id": 98,
+      "id": 98
+    },
+    {
+      "label": "Guangzhou",
+      "position": {
+        "longitude": 113.2644,
+        "latitude": 23.1291,
+        "altitude": 0.021
+      },
+      "type": "GroundStation",
+      "object_id": 33,
+      "topology_uniq_id": 99,
+      "id": 99
+    },
+    {
+      "label": "Chengdu",
+      "position": {
+        "longitude": 104.0668,
+        "latitude": 30.5728,
+        "altitude": 0.5
+      },
+      "type": "GroundStation",
+      "object_id": 34,
+      "topology_uniq_id": 100,
+      "id": 100
+    },
+    {
+      "label": "Urumqi",
+      "position": {
+        "longitude": 87.6168,
+        "latitude": 43.8256,
+        "altitude": 0.8
+      },
+      "type": "GroundStation",
+      "object_id": 35,
+      "topology_uniq_id": 101,
+      "id": 101
+    },
+    {
+      "label": "Johannesburg",
+      "position": {
+        "longitude": 28.0473,
+        "latitude": -26.2041,
+        "altitude": 1.753
+      },
+      "type": "GroundStation",
+      "object_id": 36,
+      "topology_uniq_id": 102,
+      "id": 102
+    },
+    {
+      "label": "Lagos",
+      "position": {
+        "longitude": 3.3792,
+        "latitude": 6.5244,
+        "altitude": 0.041
+      },
+      "type": "GroundStation",
+      "object_id": 37,
+      "topology_uniq_id": 103,
+      "id": 103
+    },
+    {
+      "label": "Santiago",
+      "position": {
+        "longitude": -70.6693,
+        "latitude": -33.4489,
+        "altitude": 0.52
+      },
+      "type": "GroundStation",
+      "object_id": 38,
+      "topology_uniq_id": 104,
+      "id": 104
+    },
+    {
+      "label": "San Juan",
+      "position": {
+        "longitude": -66.1057,
+        "latitude": 18.4655,
+        "altitude": 0.006
+      },
+      "type": "GroundStation",
+      "object_id": 39,
+      "topology_uniq_id": 105,
+      "id": 105
+    },
+    {
+      "label": "Mumbai",
+      "position": {
+        "longitude": 72.8777,
+        "latitude": 19.076,
+        "altitude": 0.014
+      },
+      "type": "GroundStation",
+      "object_id": 40,
+      "topology_uniq_id": 106,
+      "id": 106
+    },
+    {
+      "label": "Riyadh",
+      "position": {
+        "longitude": 46.6753,
+        "latitude": 24.7136,
+        "altitude": 0.612
+      },
+      "type": "GroundStation",
+      "object_id": 41,
+      "topology_uniq_id": 107,
+      "id": 107
+    },
+    {
+      "label": "Troms\u00f8",
+      "position": {
+        "longitude": 18.9553,
+        "latitude": 69.6492,
+        "altitude": 0.006
+      },
+      "type": "GroundStation",
+      "object_id": 42,
+      "topology_uniq_id": 108,
+      "id": 108
+    },
+    {
+      "label": "Auckland",
+      "position": {
+        "longitude": 174.7633,
+        "latitude": -36.8485,
+        "altitude": 0.002
+      },
+      "type": "GroundStation",
+      "object_id": 43,
+      "topology_uniq_id": 109,
+      "id": 109
+    },
+    {
+      "label": "Punta Arenas",
+      "position": {
+        "longitude": -70.9171,
+        "latitude": -53.1638,
+        "altitude": 0.034
+      },
+      "type": "GroundStation",
+      "object_id": 44,
+      "topology_uniq_id": 110,
+      "id": 110
+    },
+    {
+      "label": "Astana",
+      "position": {
+        "longitude": 71.4704,
+        "latitude": 51.1605,
+        "altitude": 0.347
+      },
+      "type": "GroundStation",
+      "object_id": 45,
+      "topology_uniq_id": 111,
+      "id": 111
+    },
+    {
+      "label": "Tashkent",
+      "position": {
+        "longitude": 69.2401,
+        "latitude": 41.2995,
+        "altitude": 0.455
+      },
+      "type": "GroundStation",
+      "object_id": 46,
+      "topology_uniq_id": 112,
+      "id": 112
+    },
+    {
+      "label": "Novosibirsk",
+      "position": {
+        "longitude": 82.9357,
+        "latitude": 55.0084,
+        "altitude": 0.128
+      },
+      "type": "GroundStation",
+      "object_id": 47,
+      "topology_uniq_id": 113,
+      "id": 113
+    }
+  ],
+  "edges": [
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3507818.5413801493,
+      "weight": 350781.85413801495,
+      "source": 0,
+      "target": 11
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3636855.6304703588,
+      "weight": 363685.5630470359,
+      "source": 0,
+      "target": 1
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3656068.4420889863,
+      "weight": 365606.84420889866,
+      "source": 0,
+      "target": 10
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2159828.925340621,
+      "weight": 215982.8925340621,
+      "source": 1,
+      "target": 12
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3625942.4220657563,
+      "weight": 362594.24220657564,
+      "source": 1,
+      "target": 2
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1301798.1661962532,
+      "weight": 1301798.1661962532,
+      "source": 1,
+      "target": 80
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 1591323.062773405,
+      "weight": 159132.3062773405,
+      "source": 2,
+      "target": 13
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3637260.9172502495,
+      "weight": 363726.091725025,
+      "source": 2,
+      "target": 3
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1971148.2261534007,
+      "weight": 1971148.2261534007,
+      "source": 2,
+      "target": 76
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1792140.5271317794,
+      "weight": 1792140.5271317794,
+      "source": 2,
+      "target": 79
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1079294.9226851792,
+      "weight": 1079294.9226851792,
+      "source": 2,
+      "target": 84
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1180777.5612624597,
+      "weight": 1180777.5612624597,
+      "source": 2,
+      "target": 108
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2873986.8090565978,
+      "weight": 287398.6809056598,
+      "source": 3,
+      "target": 14
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3656825.3916035607,
+      "weight": 365682.5391603561,
+      "source": 3,
+      "target": 4
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1615358.350320799,
+      "weight": 1615358.350320799,
+      "source": 3,
+      "target": 66
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1474246.2562859524,
+      "weight": 1474246.2562859524,
+      "source": 3,
+      "target": 67
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1200728.8934847454,
+      "weight": 1200728.8934847454,
+      "source": 3,
+      "target": 68
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 973108.7738447121,
+      "weight": 973108.7738447121,
+      "source": 3,
+      "target": 69
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1104631.8023395443,
+      "weight": 1104631.8023395443,
+      "source": 3,
+      "target": 70
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1489678.1817068858,
+      "weight": 1489678.1817068858,
+      "source": 3,
+      "target": 72
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1882428.0526254976,
+      "weight": 1882428.0526254976,
+      "source": 3,
+      "target": 73
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1034992.6978934209,
+      "weight": 1034992.6978934209,
+      "source": 3,
+      "target": 74
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1351091.5841578103,
+      "weight": 1351091.5841578103,
+      "source": 3,
+      "target": 75
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1814558.0485473957,
+      "weight": 1814558.0485473957,
+      "source": 3,
+      "target": 77
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1407479.8235126263,
+      "weight": 1407479.8235126263,
+      "source": 3,
+      "target": 78
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1303763.1456612505,
+      "weight": 1303763.1456612505,
+      "source": 3,
+      "target": 85
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3925046.9378026607,
+      "weight": 392504.6937802661,
+      "source": 4,
+      "target": 15
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3658842.7779011843,
+      "weight": 365884.2777901185,
+      "source": 4,
+      "target": 5
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 954807.780468849,
+      "weight": 954807.780468849,
+      "source": 4,
+      "target": 103
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3921664.273113222,
+      "weight": 392166.4273113222,
+      "source": 5,
+      "target": 16
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3637101.0323831146,
+      "weight": 363710.1032383115,
+      "source": 5,
+      "target": 6
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1947175.6851462305,
+      "weight": 1947175.6851462305,
+      "source": 5,
+      "target": 102
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2868205.9325927105,
+      "weight": 286820.59325927106,
+      "source": 6,
+      "target": 17
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3613706.6831302685,
+      "weight": 361370.6683130269,
+      "source": 6,
+      "target": 7
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 1585566.432561172,
+      "weight": 158556.6432561172,
+      "source": 7,
+      "target": 18
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3613431.8239454078,
+      "weight": 361343.1823945408,
+      "source": 7,
+      "target": 8
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1495012.993843472,
+      "weight": 1495012.993843472,
+      "source": 7,
+      "target": 91
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2145840.1069234475,
+      "weight": 214584.01069234475,
+      "source": 8,
+      "target": 19
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3636355.1558605833,
+      "weight": 363635.5155860584,
+      "source": 8,
+      "target": 9
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3495349.1441646046,
+      "weight": 349534.9144164605,
+      "source": 9,
+      "target": 20
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3657928.849387614,
+      "weight": 365792.8849387614,
+      "source": 9,
+      "target": 10
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1941689.9229492892,
+      "weight": 1941689.9229492892,
+      "source": 9,
+      "target": 109
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 4071079.3486049413,
+      "weight": 407107.93486049416,
+      "source": 10,
+      "target": 21
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2168870.87541955,
+      "weight": 2168870.87541955,
+      "source": 10,
+      "target": 81
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3740612.4212502115,
+      "weight": 374061.2421250212,
+      "source": 11,
+      "target": 22
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3647139.5886192936,
+      "weight": 364713.95886192936,
+      "source": 11,
+      "target": 12
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3660314.2502936693,
+      "weight": 366031.425029367,
+      "source": 11,
+      "target": 21
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2150100.85939992,
+      "weight": 2150100.85939992,
+      "source": 11,
+      "target": 82
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2508022.9221898504,
+      "weight": 250802.29221898504,
+      "source": 12,
+      "target": 23
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3628862.383398752,
+      "weight": 362886.23833987524,
+      "source": 12,
+      "target": 13
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1434932.4170356651,
+      "weight": 1434932.4170356651,
+      "source": 12,
+      "target": 80
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1464751.9239694418,
+      "weight": 1464751.9239694418,
+      "source": 12,
+      "target": 95
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2034890.1516076194,
+      "weight": 203489.01516076195,
+      "source": 13,
+      "target": 24
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3629077.7170944866,
+      "weight": 362907.77170944866,
+      "source": 13,
+      "target": 14
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1425213.9388744556,
+      "weight": 1425213.9388744556,
+      "source": 13,
+      "target": 84
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3148703.31311859,
+      "weight": 314870.331311859,
+      "source": 14,
+      "target": 25
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3647734.2727360995,
+      "weight": 364773.42727360997,
+      "source": 14,
+      "target": 15
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1769096.39695646,
+      "weight": 1769096.39695646,
+      "source": 14,
+      "target": 66
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2100109.9265447925,
+      "weight": 2100109.9265447925,
+      "source": 14,
+      "target": 71
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1400963.6487013076,
+      "weight": 1400963.6487013076,
+      "source": 14,
+      "target": 73
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1369673.7097966208,
+      "weight": 1369673.7097966208,
+      "source": 14,
+      "target": 76
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1872979.8375289517,
+      "weight": 1872979.8375289517,
+      "source": 14,
+      "target": 78
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1725118.285355591,
+      "weight": 1725118.285355591,
+      "source": 14,
+      "target": 79
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2153655.434145084,
+      "weight": 2153655.434145084,
+      "source": 14,
+      "target": 85
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1807735.6250879206,
+      "weight": 1807735.6250879206,
+      "source": 14,
+      "target": 108
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 4137553.1567084654,
+      "weight": 413755.31567084655,
+      "source": 15,
+      "target": 26
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3661184.725051233,
+      "weight": 366118.47250512335,
+      "source": 15,
+      "target": 16
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2020585.490199544,
+      "weight": 2020585.490199544,
+      "source": 15,
+      "target": 71
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1641990.269147556,
+      "weight": 1641990.269147556,
+      "source": 15,
+      "target": 87
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 968124.9746887421,
+      "weight": 968124.9746887421,
+      "source": 15,
+      "target": 107
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 4134063.0903465236,
+      "weight": 413406.30903465237,
+      "source": 16,
+      "target": 27
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3650023.807061238,
+      "weight": 365002.38070612383,
+      "source": 16,
+      "target": 17
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1299711.242673532,
+      "weight": 1299711.242673532,
+      "source": 16,
+      "target": 86
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3142522.91639464,
+      "weight": 314252.29163946403,
+      "source": 17,
+      "target": 28
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3623717.7341853175,
+      "weight": 362371.77341853175,
+      "source": 17,
+      "target": 18
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2028659.5459202807,
+      "weight": 202865.95459202808,
+      "source": 18,
+      "target": 29
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3609939.5156691913,
+      "weight": 360993.95156691916,
+      "source": 18,
+      "target": 19
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2494608.3679385744,
+      "weight": 249460.83679385745,
+      "source": 19,
+      "target": 30
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3623174.4176347908,
+      "weight": 362317.4417634791,
+      "source": 19,
+      "target": 20
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1495784.308967342,
+      "weight": 1495784.308967342,
+      "source": 19,
+      "target": 91
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3728291.9943227554,
+      "weight": 372829.19943227555,
+      "source": 20,
+      "target": 31
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3649150.7143289247,
+      "weight": 364915.07143289247,
+      "source": 20,
+      "target": 21
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 4277347.954263738,
+      "weight": 427734.79542637384,
+      "source": 21,
+      "target": 32
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3507818.5589270736,
+      "weight": 350781.85589270736,
+      "source": 22,
+      "target": 33
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3636855.679031263,
+      "weight": 363685.56790312636,
+      "source": 22,
+      "target": 23
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3656068.4831625433,
+      "weight": 365606.8483162543,
+      "source": 22,
+      "target": 32
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1902902.7408293749,
+      "weight": 1902902.7408293749,
+      "source": 22,
+      "target": 82
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1328199.5032576679,
+      "weight": 1328199.5032576679,
+      "source": 22,
+      "target": 94
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2043705.0976676159,
+      "weight": 2043705.0976676159,
+      "source": 22,
+      "target": 95
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1527337.431986873,
+      "weight": 1527337.431986873,
+      "source": 22,
+      "target": 96
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2159828.9384133024,
+      "weight": 215982.89384133025,
+      "source": 23,
+      "target": 34
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3625942.421679653,
+      "weight": 362594.24216796533,
+      "source": 23,
+      "target": 24
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 1591323.0548384842,
+      "weight": 159132.30548384844,
+      "source": 24,
+      "target": 35
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3637260.8683563783,
+      "weight": 363726.08683563786,
+      "source": 24,
+      "target": 25
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1588428.8517143645,
+      "weight": 1588428.8517143645,
+      "source": 24,
+      "target": 84
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1789773.609929315,
+      "weight": 1789773.609929315,
+      "source": 24,
+      "target": 108
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2873986.7756027738,
+      "weight": 287398.6775602774,
+      "source": 25,
+      "target": 36
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3656825.351036853,
+      "weight": 365682.53510368534,
+      "source": 25,
+      "target": 26
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1442435.1298657784,
+      "weight": 1442435.1298657784,
+      "source": 25,
+      "target": 101
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1383374.2555648212,
+      "weight": 1383374.2555648212,
+      "source": 25,
+      "target": 111
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 849782.5598502869,
+      "weight": 849782.5598502869,
+      "source": 25,
+      "target": 112
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1883600.9216910442,
+      "weight": 1883600.9216910442,
+      "source": 25,
+      "target": 113
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3925046.910260671,
+      "weight": 392504.6910260671,
+      "source": 26,
+      "target": 37
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3658842.793802376,
+      "weight": 365884.2793802376,
+      "source": 26,
+      "target": 27
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1477977.7384324395,
+      "weight": 1477977.7384324395,
+      "source": 26,
+      "target": 106
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3921664.2803719696,
+      "weight": 392166.428037197,
+      "source": 27,
+      "target": 38
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3637101.085573174,
+      "weight": 363710.1085573174,
+      "source": 27,
+      "target": 28
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2868205.9509516866,
+      "weight": 286820.5950951687,
+      "source": 28,
+      "target": 39
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3613706.711352473,
+      "weight": 361370.67113524734,
+      "source": 28,
+      "target": 29
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 1585566.4373274134,
+      "weight": 158556.64373274136,
+      "source": 29,
+      "target": 40
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3613431.7950384123,
+      "weight": 361343.17950384127,
+      "source": 29,
+      "target": 30
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1245558.4693204085,
+      "weight": 1245558.4693204085,
+      "source": 29,
+      "target": 91
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2145840.084834588,
+      "weight": 214584.00848345883,
+      "source": 30,
+      "target": 41
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3636355.1027941136,
+      "weight": 363635.5102794114,
+      "source": 30,
+      "target": 31
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3495349.1079876088,
+      "weight": 349534.9107987609,
+      "source": 31,
+      "target": 42
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3657928.8342640363,
+      "weight": 365792.8834264036,
+      "source": 31,
+      "target": 32
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 4071079.337969352,
+      "weight": 407107.93379693525,
+      "source": 32,
+      "target": 43
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3740612.454745091,
+      "weight": 374061.24547450914,
+      "source": 33,
+      "target": 44
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3647139.6287608864,
+      "weight": 364713.9628760887,
+      "source": 33,
+      "target": 34
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3660314.2637104103,
+      "weight": 366031.42637104105,
+      "source": 33,
+      "target": 43
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2042931.7945358441,
+      "weight": 2042931.7945358441,
+      "source": 33,
+      "target": 92
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1452833.579637288,
+      "weight": 1452833.579637288,
+      "source": 33,
+      "target": 93
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1041803.451896763,
+      "weight": 1041803.451896763,
+      "source": 33,
+      "target": 105
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2508022.9394522887,
+      "weight": 250802.29394522888,
+      "source": 34,
+      "target": 45
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3628862.403106914,
+      "weight": 362886.2403106914,
+      "source": 34,
+      "target": 35
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2108166.852142656,
+      "weight": 2108166.852142656,
+      "source": 34,
+      "target": 92
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2034890.1479275485,
+      "weight": 203489.01479275487,
+      "source": 35,
+      "target": 46
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3629077.693695713,
+      "weight": 362907.7693695713,
+      "source": 35,
+      "target": 36
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1203677.2680754242,
+      "weight": 1203677.2680754242,
+      "source": 35,
+      "target": 84
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2023185.987282809,
+      "weight": 2023185.987282809,
+      "source": 35,
+      "target": 108
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3148703.308601895,
+      "weight": 314870.3308601895,
+      "source": 36,
+      "target": 47
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3647734.2332022344,
+      "weight": 364773.42332022346,
+      "source": 36,
+      "target": 37
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2062779.1730257266,
+      "weight": 2062779.1730257266,
+      "source": 36,
+      "target": 101
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1573825.7280897656,
+      "weight": 1573825.7280897656,
+      "source": 36,
+      "target": 113
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 4137553.166098185,
+      "weight": 413755.3166098185,
+      "source": 37,
+      "target": 48
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3661184.715893327,
+      "weight": 366118.4715893327,
+      "source": 37,
+      "target": 38
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2007873.7587775711,
+      "weight": 2007873.7587775711,
+      "source": 37,
+      "target": 97
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1651956.6208647816,
+      "weight": 1651956.6208647816,
+      "source": 37,
+      "target": 98
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 918725.3091293436,
+      "weight": 918725.3091293436,
+      "source": 37,
+      "target": 99
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1118119.8510476097,
+      "weight": 1118119.8510476097,
+      "source": 37,
+      "target": 100
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 4134063.120936386,
+      "weight": 413406.3120936386,
+      "source": 38,
+      "target": 49
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3650023.839133235,
+      "weight": 365002.3839133235,
+      "source": 38,
+      "target": 39
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1534504.7215842225,
+      "weight": 1534504.7215842225,
+      "source": 38,
+      "target": 89
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3142522.9445532267,
+      "weight": 314252.29445532267,
+      "source": 39,
+      "target": 50
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3623717.769419527,
+      "weight": 362371.77694195276,
+      "source": 39,
+      "target": 40
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1299238.1059393266,
+      "weight": 1299238.1059393266,
+      "source": 39,
+      "target": 90
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2028659.550444343,
+      "weight": 202865.9550444343,
+      "source": 40,
+      "target": 51
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3609939.513477183,
+      "weight": 360993.9513477183,
+      "source": 40,
+      "target": 41
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1512764.3749431963,
+      "weight": 1512764.3749431963,
+      "source": 40,
+      "target": 91
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2494608.3622729843,
+      "weight": 249460.83622729845,
+      "source": 41,
+      "target": 52
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3623174.380550213,
+      "weight": 362317.43805502134,
+      "source": 41,
+      "target": 42
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3728291.9944284176,
+      "weight": 372829.1994428418,
+      "source": 42,
+      "target": 53
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3649150.685142481,
+      "weight": 364915.0685142481,
+      "source": 42,
+      "target": 43
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1177986.8941221517,
+      "weight": 1177986.8941221517,
+      "source": 42,
+      "target": 104
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1559512.5999562754,
+      "weight": 1559512.5999562754,
+      "source": 42,
+      "target": 110
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 4277347.975169131,
+      "weight": 427734.7975169131,
+      "source": 43,
+      "target": 54
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3507818.5355993654,
+      "weight": 350781.8535599366,
+      "source": 44,
+      "target": 55
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3636855.6894243318,
+      "weight": 363685.5689424332,
+      "source": 44,
+      "target": 45
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3656068.495156307,
+      "weight": 365606.8495156307,
+      "source": 44,
+      "target": 54
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2159828.926542539,
+      "weight": 215982.89265425393,
+      "source": 45,
+      "target": 56
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3625942.4184333836,
+      "weight": 362594.24184333836,
+      "source": 45,
+      "target": 46
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2216975.8419899903,
+      "weight": 2216975.8419899903,
+      "source": 45,
+      "target": 79
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1418249.9509677268,
+      "weight": 1418249.9509677268,
+      "source": 45,
+      "target": 84
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1717587.354259469,
+      "weight": 1717587.354259469,
+      "source": 45,
+      "target": 108
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 1591323.0515043861,
+      "weight": 159132.30515043862,
+      "source": 46,
+      "target": 57
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3637260.8552365364,
+      "weight": 363726.08552365366,
+      "source": 46,
+      "target": 47
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2873986.7596701514,
+      "weight": 287398.67596701515,
+      "source": 47,
+      "target": 58
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3656825.3433345286,
+      "weight": 365682.5343334529,
+      "source": 47,
+      "target": 48
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 980979.505860682,
+      "weight": 980979.505860682,
+      "source": 47,
+      "target": 88
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2199452.424052392,
+      "weight": 2199452.424052392,
+      "source": 47,
+      "target": 98
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3925046.8875502083,
+      "weight": 392504.68875502085,
+      "source": 48,
+      "target": 59
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3658842.8006918086,
+      "weight": 365884.2800691809,
+      "source": 48,
+      "target": 49
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3921664.2556308936,
+      "weight": 392166.4255630894,
+      "source": 49,
+      "target": 60
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3637101.0988281965,
+      "weight": 363710.1098828197,
+      "source": 49,
+      "target": 50
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2868205.9320399114,
+      "weight": 286820.5932039911,
+      "source": 50,
+      "target": 61
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3613706.7155138836,
+      "weight": 361370.6715513884,
+      "source": 50,
+      "target": 51
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 1585566.4332615698,
+      "weight": 158556.643326157,
+      "source": 51,
+      "target": 62
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3613431.785417941,
+      "weight": 361343.1785417941,
+      "source": 51,
+      "target": 52
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1483579.8422341263,
+      "weight": 1483579.8422341263,
+      "source": 51,
+      "target": 91
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 2145840.0751627367,
+      "weight": 214584.00751627368,
+      "source": 52,
+      "target": 63
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3636355.0904146004,
+      "weight": 363635.50904146006,
+      "source": 52,
+      "target": 53
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2067443.8167324602,
+      "weight": 2067443.8167324602,
+      "source": 52,
+      "target": 110
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 3495349.0879767835,
+      "weight": 349534.90879767836,
+      "source": 53,
+      "target": 64
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3657928.8336673337,
+      "weight": 365792.8833667334,
+      "source": 53,
+      "target": 54
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1668650.2239878336,
+      "weight": 1668650.2239878336,
+      "source": 53,
+      "target": 83
+    },
+    {
+      "direction": "ADJACENT",
+      "type": "InterSatelliteLink",
+      "distance": 4071079.313702576,
+      "weight": 407107.93137025763,
+      "source": 54,
+      "target": 65
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3647139.610730573,
+      "weight": 364713.9610730573,
+      "source": 55,
+      "target": 56
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3660314.2615820137,
+      "weight": 366031.4261582014,
+      "source": 55,
+      "target": 65
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1962012.7614793465,
+      "weight": 1962012.7614793465,
+      "source": 55,
+      "target": 70
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2175409.241994205,
+      "weight": 2175409.241994205,
+      "source": 55,
+      "target": 103
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3628862.3904065364,
+      "weight": 362886.2390406537,
+      "source": 56,
+      "target": 57
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1125153.6911788438,
+      "weight": 1125153.6911788438,
+      "source": 56,
+      "target": 66
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1029197.5422193507,
+      "weight": 1029197.5422193507,
+      "source": 56,
+      "target": 67
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1209828.3395642713,
+      "weight": 1209828.3395642713,
+      "source": 56,
+      "target": 68
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1969185.8604323529,
+      "weight": 1969185.8604323529,
+      "source": 56,
+      "target": 69
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 2083345.5751640631,
+      "weight": 2083345.5751640631,
+      "source": 56,
+      "target": 70
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 947561.4169797015,
+      "weight": 947561.4169797015,
+      "source": 56,
+      "target": 72
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1466075.2025585882,
+      "weight": 1466075.2025585882,
+      "source": 56,
+      "target": 73
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1400286.4362350851,
+      "weight": 1400286.4362350851,
+      "source": 56,
+      "target": 74
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1049035.7275141182,
+      "weight": 1049035.7275141182,
+      "source": 56,
+      "target": 75
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1176665.7944265944,
+      "weight": 1176665.7944265944,
+      "source": 56,
+      "target": 76
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1084278.1821881072,
+      "weight": 1084278.1821881072,
+      "source": 56,
+      "target": 77
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1525163.377088409,
+      "weight": 1525163.377088409,
+      "source": 56,
+      "target": 78
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 937143.8314127491,
+      "weight": 937143.8314127491,
+      "source": 56,
+      "target": 79
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1153812.8355777091,
+      "weight": 1153812.8355777091,
+      "source": 56,
+      "target": 85
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1760698.6206594217,
+      "weight": 1760698.6206594217,
+      "source": 56,
+      "target": 108
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3629077.700994853,
+      "weight": 362907.7700994853,
+      "source": 57,
+      "target": 58
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1468188.2520888795,
+      "weight": 1468188.2520888795,
+      "source": 57,
+      "target": 84
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3647734.252138698,
+      "weight": 364773.42521386984,
+      "source": 58,
+      "target": 59
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3661184.7242406295,
+      "weight": 366118.47242406296,
+      "source": 59,
+      "target": 60
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3650023.8270104495,
+      "weight": 365002.38270104496,
+      "source": 60,
+      "target": 61
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3623717.7512927284,
+      "weight": 362371.77512927284,
+      "source": 61,
+      "target": 62
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1068856.5342864583,
+      "weight": 1068856.5342864583,
+      "source": 61,
+      "target": 109
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3609939.5103012556,
+      "weight": 360993.9510301256,
+      "source": 62,
+      "target": 63
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1137342.238405286,
+      "weight": 1137342.238405286,
+      "source": 62,
+      "target": 91
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3623174.395979408,
+      "weight": 362317.43959794083,
+      "source": 63,
+      "target": 64
+    },
+    {
+      "direction": "ORBITAL",
+      "type": "InterSatelliteLink",
+      "distance": 3649150.7014416335,
+      "weight": 364915.0701441634,
+      "source": 64,
+      "target": 65
+    },
+    {
+      "disabled": false,
+      "type": "GroundStationLink",
+      "distance": 1944115.7038577455,
+      "weight": 1944115.7038577455,
+      "source": 65,
+      "target": 103
+    }
+  ]
+}

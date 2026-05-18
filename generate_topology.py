@@ -196,6 +196,78 @@ def get_edges(n: int, topology: str, **kwargs):
 
 
 # ---------------------------------------------------------------------------
+# NetworkX graph import
+# ---------------------------------------------------------------------------
+
+def edges_from_networkx(G) -> tuple[list[tuple[int, int]], dict, dict]:
+    """Extract satellite nodes and ISL edges from a SatComTopology NetworkX graph.
+
+    Satellites are sorted by their topology_uniq_id for reproducible ordering,
+    then assigned 1-based integer indices (sat1, sat2, …).
+
+    Returns:
+        edges     – sorted list of (a, b) int pairs, a < b, 1-based
+        node_map  – {nx_node_id: 1-based index}
+        positions – {1-based index: {"longitude": float, "latitude": float,
+                                     "altitude": float}} (empty if not in graph)
+    """
+    sat_nodes = sorted(
+        [n for n, d in G.nodes(data=True) if d.get("type") == "Satellite"],
+        key=lambda n: G.nodes[n].get("topology_uniq_id", 0),
+    )
+    if not sat_nodes:
+        raise ValueError("No nodes with type='Satellite' found in the graph.")
+
+    node_map = {n: i + 1 for i, n in enumerate(sat_nodes)}
+
+    positions = {}
+    for n in sat_nodes:
+        pos = G.nodes[n].get("position")
+        if pos:
+            positions[node_map[n]] = {
+                "longitude": pos["longitude"],
+                "latitude":  pos["latitude"],
+                "altitude":  pos.get("altitude", 0),
+            }
+
+    seen: set[tuple[int, int]] = set()
+    edges: list[tuple[int, int]] = []
+    for u, v, d in G.edges(data=True):
+        if d.get("type") != "InterSatelliteLink":
+            continue
+        if u not in node_map or v not in node_map:
+            continue
+        a, b = node_map[u], node_map[v]
+        if a > b:
+            a, b = b, a
+        if (a, b) not in seen:
+            seen.add((a, b))
+            edges.append((a, b))
+
+    return sorted(edges), node_map, positions
+
+
+def load_networkx_graph(path: str):
+    """Load a NetworkX graph from a JSON file in node-link format.
+
+    SatComTopology's NetworkXAdapter.adapt() writes this format by default.
+    You can also produce it manually with:
+        json.dump(networkx.readwrite.json_graph.node_link_data(G), f)
+    """
+    try:
+        import networkx as nx
+        from networkx.readwrite import json_graph
+    except ImportError:
+        raise SystemExit("networkx is required: pip install networkx")
+    with open(path) as f:
+        data = json.load(f)
+    # NetworkX >= 3.x writes "edges"; older versions write "links".
+    # Pass the key explicitly so node_link_graph finds it either way.
+    edge_key = "edges" if "edges" in data else "links"
+    return json_graph.node_link_graph(data, edges=edge_key)
+
+
+# ---------------------------------------------------------------------------
 # Core generator
 # ---------------------------------------------------------------------------
 
@@ -204,13 +276,15 @@ def generate(
     nb_gnd_station: int,
     topology: str,
     isl_profile: str,
-    ospf: bool = True,
+    ospf: bool = False,
     multicast: bool = False,
     branch: int = 2,
     cluster_size: int = 5,
     sparse_distance: int = 2,
     algorithms_dir: str = DEFAULT_ALGORITHMS_DIR,
-    logs_dir: str = DEFAULT_LOGS_DIR
+    logs_dir: str = DEFAULT_LOGS_DIR,
+    edges: list = None,
+    node_positions: dict = None,
 ):
     """
     Build all artefacts for the .gnet archive.
@@ -221,8 +295,9 @@ def generate(
         node_infos    : dict[str, dict] – {node_name: info dict for algorithms}
     """
     nodes = [node_name(i) for i in range(1, n + 1)]
-    edges = get_edges(n, topology, branch=branch, cluster_size=cluster_size,
-                      sparse_distance=sparse_distance)
+    if edges is None:
+        edges = get_edges(n, topology, branch=branch, cluster_size=cluster_size,
+                          sparse_distance=sparse_distance)
 
 
     # Per-node interface counter and assignment list
@@ -422,6 +497,8 @@ def generate(
             "isl_profile":       isl_profile,
             "topology":          topology,
         }
+        if node_positions and i in node_positions:
+            node_infos[nd]["position"] = node_positions[i]
 
     for i, ng in enumerate(station, start=1):
         lo_ip   = loopback_ip(n+i, with_prefix=True)
@@ -575,7 +652,8 @@ def main():
         help="ISL link emulation profile: leo | geo | deep-space | none (default: leo)")
     parser.add_argument("--output", "-o", default=None,
         help="Output .gnet file path (default: swarm_<topology>_<n>[_noospf].gnet)")
-    parser.add_argument("--ground_station", "-g", type=int, default=0,
+    parser.add_argument("--ground-station", "-g", type=int, default=0,
+        dest="ground_station",
         help="Number of ground station nodes (default: 0)")
 
     ospf_group = parser.add_mutually_exclusive_group()
@@ -600,9 +678,28 @@ def main():
         help=f"Host path mounted at /algorithms in each container (default: {DEFAULT_ALGORITHMS_DIR})")
     parser.add_argument("--logs-dir", default=DEFAULT_LOGS_DIR,
         help=f"Host path mounted at /logs in each container (default: {DEFAULT_LOGS_DIR})")
+    parser.add_argument("--from-graph", metavar="FILE", default=None,
+        help="Path to a NetworkX JSON file (node-link format) to use as the satellite topology. "
+             "Satellite nodes and InterSatelliteLink edges are extracted automatically; "
+             "--topology and --nodes are ignored when this is set.")
 
     args = parser.parse_args()
 
+    # ---- resolve edges and node count from graph file if provided -----------
+    nx_edges = None
+    nx_positions = None
+    topology_label = args.topology
+
+    if args.from_graph:
+        G = load_networkx_graph(args.from_graph)
+        nx_edges, _, nx_positions = edges_from_networkx(G)
+        if not nx_edges:
+            parser.error(f"No InterSatelliteLink edges found in {args.from_graph}")
+        all_indices = {i for edge in nx_edges for i in edge}
+        args.nodes = max(all_indices)
+        topology_label = os.path.splitext(os.path.basename(args.from_graph))[0]
+        print(f"Loaded graph from {args.from_graph}: "
+              f"{args.nodes} satellites, {len(nx_edges)} ISLs")
 
     if args.nodes < 2:
         parser.error("--nodes must be at least 2")
@@ -612,9 +709,9 @@ def main():
     if args.output is None:
         ospf_suffix  = "_ospf" if args.ospf else ""
         mcast_suffix = "_mcast" if args.multicast else ""
-        args.output = f"swarm_{args.topology}_{args.nodes}{ospf_suffix}{mcast_suffix}.gnet"
+        args.output = f"swarm_{topology_label}_{args.nodes}{ospf_suffix}{mcast_suffix}.gnet"
 
-    print(f"Generating {args.topology} topology with {args.nodes} satellite nodes and {args.ground_station} ground stations"
+    print(f"Generating {topology_label} topology with {args.nodes} satellite nodes and {args.ground_station} ground stations "
           f"[ISL: {args.isl_profile}] "
           f"[OSPF: {'on' if args.ospf else 'off'}] "
           f"[Multicast: {'on' if args.multicast else 'off'}]")
@@ -622,7 +719,7 @@ def main():
     network_yml, frr_configs, node_infos = generate(
         n=args.nodes,
         nb_gnd_station=args.ground_station,
-        topology=args.topology,
+        topology=topology_label,
         isl_profile=args.isl_profile,
         ospf=args.ospf,
         multicast=args.multicast,
@@ -630,16 +727,18 @@ def main():
         cluster_size=args.cluster_size,
         sparse_distance=args.sparse_distance,
         algorithms_dir=args.algorithms_dir,
-        logs_dir=args.logs_dir
+        logs_dir=args.logs_dir,
+        edges=nx_edges,
+        node_positions=nx_positions,
     )
 
     package_gnet(args.output, network_yml, frr_configs, node_infos, args.algorithms_dir)
 
-    total_links = sum(len(v) for v in
-                      [get_edges(args.nodes, args.topology,
-                                 branch=args.branch,
-                                 cluster_size=args.cluster_size,
-                                 sparse_distance=args.sparse_distance)])
+    total_links = len(nx_edges) if nx_edges is not None else len(
+        get_edges(args.nodes, args.topology,
+                  branch=args.branch,
+                  cluster_size=args.cluster_size,
+                  sparse_distance=args.sparse_distance))
     print(f"Created {args.output}")
     print(f"  Nodes : {args.nodes}")
     print(f"  Links : {total_links}")

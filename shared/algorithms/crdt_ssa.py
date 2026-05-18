@@ -189,8 +189,8 @@ def _load_gp_entries(path: str = _DATA_PATH) -> list:
 
 parser = argparse.ArgumentParser(description="CRDT SSA catalog")
 parser.add_argument(
-    "--ground", metavar="NODE", default="sat1",
-    help="name of the ground node that originates GP updates (default: sat1)",
+    "--ground", metavar="NODE", default="gnd1",
+    help="name of the ground node that originates GP updates (default: gnd1)",
 )
 args = parser.parse_args()
 
