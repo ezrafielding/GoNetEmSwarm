@@ -17,6 +17,7 @@
 #   ./run_test.sh fullstart crdt_ssa --ground gnd2    # override ground node
 #   ./run_test.sh topology                            # full discovery + figure
 #   ./run_test.sh topology --isl-only                 # satellites only
+#   ./run_test.sh isl-tune                            # fix TBF burst for large packets (run once after opening topology)
 #   ./run_test.sh stop
 #   ./run_test.sh logs crdt_ssa
 #
@@ -313,6 +314,36 @@ cmd_archive() {
 }
 
 # ---------------------------------------------------------------------------
+# ISL link tuning — widen TBF burst so full-size UDP packets are delivered.
+# The default gonetem TBF burst (100 bytes) drops anything larger, which
+# breaks CRDT broadcasts (~400–600 bytes). Run once after opening a topology.
+# ---------------------------------------------------------------------------
+
+cmd_isl_tune() {
+    local burst="${1:-10240}"   # bytes; 10 KB is safe for ~1 KB payloads
+    mapfile -t containers < <(find_sat_containers)
+    [[ ${#containers[@]} -gt 0 ]] || die "No satellite containers found."
+
+    echo "Tuning ISL TBF burst to ${burst}b on ${#containers[@]} satellite nodes…"
+    for container in "${containers[@]}"; do
+        local node
+        node="$(node_from_container "$container")"
+        for iface in eth0 eth1 eth2 eth3; do
+            docker exec "$container" bash -c "
+                if ip link show $iface &>/dev/null; then
+                    tc qdisc show dev $iface | grep -q tbf || exit 0
+                    rate=\$(tc qdisc show dev $iface | grep -oP 'rate \K\S+')
+                    lat=\$(tc qdisc show dev $iface | grep -oP 'lat \K\S+')
+                    tc qdisc change dev $iface parent 1:1 handle 10: tbf rate \${rate} burst ${burst}b lat \${lat} 2>/dev/null || true
+                fi
+            " 2>/dev/null
+        done
+        echo "  ✓ $node"
+    done
+    echo "Done. ISL links now support packets up to ~${burst} bytes."
+}
+
+# ---------------------------------------------------------------------------
 # OSPF convergence helper
 # ---------------------------------------------------------------------------
 
@@ -350,6 +381,7 @@ case "$COMMAND" in
     clean)      cmd_clean ;;
     archive)    cmd_archive "$@" ;;
     ospf-check) cmd_ospf_check ;;
+    isl-tune)   cmd_isl_tune "$@" ;;
     help|--help|-h)
         sed -n '/^# Usage/,/^# -----------/p' "$0" | grep -v '^# ---' | sed 's/^# //'
         ;;
