@@ -103,8 +103,14 @@ cmd_fullstart() {
     [[ -n "$algorithm" ]] || die "Usage: $0 fullstart <algorithm> [args...]"
     shift
 
-    cmd_start    "$algorithm" "$@"
-    cmd_gndstart "$algorithm" "$@"
+    # Support paired _sat / _gnd scripts (e.g. ssa_control_sat.py + ssa_control_gnd.py)
+    if [[ -f "$ALGORITHMS_DIR/${algorithm}_sat.py" ]]; then
+        cmd_start    "${algorithm}_sat" "$@"
+        cmd_gndstart "${algorithm}_gnd" "$@"
+    else
+        cmd_start    "$algorithm" "$@"
+        cmd_gndstart "$algorithm" "$@"
+    fi
 }
 
 cmd_start() {
@@ -296,6 +302,16 @@ cmd_clean() {
     echo "Done."
 }
 
+cmd_archive() {
+    local name="${1:-}"
+    [[ -n "$name" ]] || die "Usage: $0 archive <name>  (e.g. control | broadcast | tree)"
+    local dest="$LOGS_DIR/$name"
+    mkdir -p "$dest"
+    cp "$LOGS_DIR"/*.log "$dest/" 2>/dev/null || true
+    cp "$LOGS_DIR"/*.csv "$dest/" 2>/dev/null || true
+    echo "Archived logs to $dest"
+}
+
 # ---------------------------------------------------------------------------
 # OSPF convergence helper
 # ---------------------------------------------------------------------------
@@ -332,11 +348,12 @@ case "$COMMAND" in
     status)     cmd_status ;;
     logs)       cmd_logs "$@" ;;
     clean)      cmd_clean ;;
+    archive)    cmd_archive "$@" ;;
     ospf-check) cmd_ospf_check ;;
     help|--help|-h)
         sed -n '/^# Usage/,/^# -----------/p' "$0" | grep -v '^# ---' | sed 's/^# //'
         ;;
     *)
-        die "Unknown command '$COMMAND'. Try: start | stop | status | logs | clean | ospf-check"
+        die "Unknown command '$COMMAND'. Try: start | stop | status | logs | clean | archive | ospf-check"
         ;;
 esac
