@@ -17,7 +17,7 @@
 #   ./run_test.sh fullstart crdt_ssa --ground gnd2    # override ground node
 #   ./run_test.sh topology                            # full discovery + figure
 #   ./run_test.sh topology --isl-only                 # satellites only
-#   ./run_test.sh isl-tune                            # fix TBF burst for large packets (run once after opening topology)
+#   ./run_test.sh isl-tune                            # fix TBF burst for large packets on all nodes (run once after opening topology)
 #   ./run_test.sh stop
 #   ./run_test.sh logs crdt_ssa
 #
@@ -321,13 +321,16 @@ cmd_archive() {
 
 cmd_isl_tune() {
     local burst="${1:-10240}"   # bytes; 10 KB is safe for ~1 KB payloads
-    mapfile -t containers < <(find_sat_containers)
-    [[ ${#containers[@]} -gt 0 ]] || die "No satellite containers found."
+    mapfile -t sat_containers < <(find_sat_containers)
+    mapfile -t gnd_containers < <(find_gnd_containers)
+    local all_containers=("${sat_containers[@]}" "${gnd_containers[@]}")
+    [[ ${#all_containers[@]} -gt 0 ]] || die "No satellite or ground containers found."
 
-    echo "Tuning ISL TBF burst to ${burst}b on ${#containers[@]} satellite nodes…"
-    for container in "${containers[@]}"; do
+    echo "Tuning ISL TBF burst to ${burst}b on ${#sat_containers[@]} satellite and ${#gnd_containers[@]} ground nodes…"
+    for container in "${all_containers[@]}"; do
         local node
         node="$(node_from_container "$container")"
+        [[ -n "$node" ]] || node="$(gnd_from_container "$container")"
         for iface in eth0 eth1 eth2 eth3; do
             docker exec "$container" bash -c "
                 if ip link show $iface &>/dev/null; then
