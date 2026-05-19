@@ -33,7 +33,7 @@ import yaml
 
 # Match ConSwarm's ISL profiles; rate is in kbps (gonetem uses kbps)
 ISL_PROFILES = {
-    "leo":        {"delay": 250,   "jitter": 25,   "loss": 0.001,  "rate": 200},    # 200 Kbit/s
+    "leo":        {"delay": 125,   "jitter": 25,   "loss": 0.001,  "rate": 200},    # 200 Kbit/s
     "geo":        {"delay": 250,  "jitter": 25,  "loss": 0.001, "rate": 102400},  # 100 Mbit/s
     "deep-space": {"delay": 2000, "jitter": 100, "loss": 0.1,   "rate": 64},      # 64 kbit/s
     "none":       {},
