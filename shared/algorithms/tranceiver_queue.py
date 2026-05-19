@@ -107,20 +107,28 @@ class Transceiver_queue(Transceiver):
                 data, addr = self._rx_sock.recvfrom(65535)
             except socket.timeout:
                 continue
-            except OSError:
-                break
+            except OSError as e:
+                try:
+                    self.write_log_debug("RX socket OSError (continuing): " + str(e), "Transceiver_queue ")
+                except Exception:
+                    pass
+                continue
             try:
                 message = json.loads(data.decode('utf-8'))
                 self.add_rcv_journal(message, addr[0])
                 self.msg_queue.put_nowait((message, addr))
                 self.write_log_debug("Adding message to queue  ( " + str(message) + ", " + str(addr) + " )", "Transceiver_queue ")
             except queue.Full:
-                self.add_lst_journal(message, addr[0])
-                self.write_log_debug("Message queue is full, folowing packet is lost : " + str(message), "Transceiver_queue ")
-                pass  # never let a handler crash the RX thread
+                try:
+                    self.add_lst_journal(message, addr[0])
+                    self.write_log_debug("Message queue is full, folowing packet is lost : " + str(message), "Transceiver_queue ")
+                except Exception:
+                    pass
             except Exception:
-                self.write_log_debug(traceback.format_exc(), "Transceiver_queue ")
-                pass  # never let a handler crash the RX thread
+                try:
+                    self.write_log_debug(traceback.format_exc(), "Transceiver_queue ")
+                except Exception:
+                    pass  # never let a handler crash the RX thread
 
     def _tx_loop(self):
          while not self._stop_event.is_set():

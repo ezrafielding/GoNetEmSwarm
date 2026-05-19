@@ -38,8 +38,8 @@ class Tranceiver_with_mono_tree(Transceiver):
         self.childs_ip = []
         self.irrel_ip = []
         self.i_am_root = is_root
-        self.neighbors_ip = [addrs[0] for addrs in self.neighbors_addr_list]
-        self.indet_ip = self.neighbors_ip
+        self.neighbors_ip = list(self.neighbors_addr_dict.keys())
+        self.indet_ip = list(self.neighbors_ip)
         self.tree_finished = False
 
     # JE HAIS PYTHON
@@ -51,15 +51,15 @@ class Tranceiver_with_mono_tree(Transceiver):
         super().write_log_debug("Final state : { parent_ip : " + self.parent_ip + "| childs : " + str(self.childs_ip) + "| irrel : "+ str(self.irrel_ip) + "}. ")
         self.tree_finished = True
 
-    def send_query(self, addr, ac7pt : str = None):
+    def send_query(self, name, ac7pt : str = None):
         self.increment_counter()
         message = {
             "type": 8,
-            "sender": self.loopback_ip,
+            "sender": self.node_name,
             "counter": self.msg_counter,
             "payload" : {"Accept" : ac7pt}
         }
-        self.send_packets(message, addr)
+        self.send_packets(message, self.neighbors_addr_dict[name])
 
     def send_tree_broadcast(self, payload: dict):
         super().write_log_debug("Sending broadcast", "Basic_Tree_Mono")
@@ -71,14 +71,14 @@ class Tranceiver_with_mono_tree(Transceiver):
         self.increment_counter()
         message = {
             "type": 2,
-            "sender": self.loopback_ip,
+            "sender": self.node_name,
             "counter": self.msg_counter,
             "payload" : payload
         }
         if not self.i_am_root:
-            self.send_packets(message, self.parent_ip)
-        for addr in self.childs_ip:
-            self.send_packets(message, addr)
+            self.send_packets(message, self.neighbors_addr_dict[self.parent_ip])
+        for name in self.childs_ip:
+            self.send_packets(message, self.neighbors_addr_dict[name])
 
 
     def start(self):
@@ -89,10 +89,10 @@ class Tranceiver_with_mono_tree(Transceiver):
             time.sleep(2)
         if self.i_am_root:
             super().write_log_debug("I am (g)Root" , "Basic_Tree_Mono")
-            for neig_addr in self.neighbors_ip:
-                self.send_query(neig_addr)
-                self.parent_ip = self.loopback_ip
-                super().write_log_debug("New parent : " + self.loopback_ip, "Basic_Tree_Mono")
+            for neig_name in self.neighbors_ip:
+                self.send_query(neig_name)
+            self.parent_ip = self.node_name
+            super().write_log_debug("New parent : " + self.node_name, "Basic_Tree_Mono")
 
     def message_handler(self, message, addr):
         match message["type"]:
@@ -136,17 +136,17 @@ class Tranceiver_with_mono_tree(Transceiver):
                     super().write_log_debug("unable to send broadcast, tree isn't finished, waiting ...", "Basic_Tree_Mono")
                     super().write_log_debug(str(len(self.indet_ip)) + " neighbors with unknown relation remaining", "Basic_Tree_Mono")
                     time.sleep(2)
-                for neig_addr in self.neighbors_addr_list:
-                    if (addr[0] == neig_addr[1]):#check link ip at reception, not loopback ip
-                        super().write_log_debug("message not retransmited to lo : "+ neig_addr[0], "Basic_Tree_Mono")
-                    elif (neig_addr[0] == self.parent_ip):
-                        self.send_packets(message, neig_addr[0], True)
-                        super().write_log_debug("message transmited to parent : "+ neig_addr[0], "Basic_Tree_Mono")
-                    elif (neig_addr[0] in self.childs_ip):
-                        self.send_packets(message, neig_addr[0], True)
-                        super().write_log_debug("message transmited to child : "+ neig_addr[0], "Basic_Tree_Mono")
+                for node, link_ip in self.neighbors_addr_dict.items():
+                    if (addr[0] == link_ip):
+                        super().write_log_debug("message not retransmited to: "+ node, "Basic_Tree_Mono")
+                    elif (node == self.parent_ip):
+                        self.send_packets(message, link_ip, True)
+                        super().write_log_debug("message transmited to parent : "+ node, "Basic_Tree_Mono")
+                    elif (node in self.childs_ip):
+                        self.send_packets(message, link_ip, True)
+                        super().write_log_debug("message transmited to child : "+ node, "Basic_Tree_Mono")
                     else:
-                        super().write_log_debug("message not retransmited to lo : "+ neig_addr[0], "Basic_Tree_Mono")
+                        super().write_log_debug("message not retransmited to: "+ node, "Basic_Tree_Mono")
 
             case _:
                 super().write_log_debug("Message instance received : Unknown type, falling back on tranceiver.py", "Basic_Tree_Mono")

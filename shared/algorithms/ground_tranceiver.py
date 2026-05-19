@@ -39,16 +39,13 @@ class Ground_transceiver:
 
         self.link_duration = 0
 
-        self.loopback_ip: str = info["loopback_ip"]
-        #os.system("ip a add "+ self.loopback_ip +" dev lo")
         self.net_port = 5007
         self.satellite_addr_list = []
-        self.write_log_debug("Tranceiver started with lo ip : "+ self.loopback_ip)
+        self.write_log_debug("Tranceiver started: "+ self.node_name)
 
         for sat in info["neighbors"] :
-            #os.system("ip a add "+ sat["link_ip"] +" dev eth"+ sat[3:] )
-            self.satellite_addr_list.append(sat["loopback_ip"])
-            self.write_log_debug("Satellite added with lo ip : "+ sat["loopback_ip"])
+            self.satellite_addr_list.append(sat["link_ip"])
+            self.write_log_debug("Satellite added: "+ sat["name"] + " | link ip: "+ sat["link_ip"])
 
         self.linked_address = None
         self._stop_event = threading.Event()
@@ -67,13 +64,11 @@ class Ground_transceiver:
             log_file.write('\n'+str(self.get_local_time())+" "+service_name+" : "+log_message)
 
     def send_packets(self, message: dict, ip_addr: str, transfert:bool = False):
-        if not self._tx_sock:
-            self._tx_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self._tx_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.write_log_debug("sending packet packet to " + ip_addr + " with content "+ str(message))
         try:
             data = json.dumps(message).encode('utf-8')
-            self._tx_sock.sendto(data, (ip_addr, self.net_port))
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as tx:
+                tx.sendto(data, (ip_addr, self.net_port))
             if transfert:
                 self.add_tra_journal(message, ip_addr)
             else:
@@ -118,7 +113,7 @@ class Ground_transceiver:
         self.write_log_debug("Sending Unicast to : "+ addr)
         message = {
             "type": 9,
-            "sender": self.loopback_ip,
+            "sender": self.node_name,
             "counter": self.msg_counter,
             "payload" : payload
         }
