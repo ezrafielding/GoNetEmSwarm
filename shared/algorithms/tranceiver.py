@@ -108,7 +108,7 @@ class Transceiver:
 
     def add_tra_journal(self, message: dict, addr: str) -> None:
         entry = (formatted(time.process_time()) + formatted("TRA") +
-                 formatted(find_name_from_addr(addr)) + formatted(message["type"]) +
+                 formatted(self.find_name_from_addr(addr)) + formatted(message["type"]) +
                  formatted(message["sender"]) + formatted(message["counter"]) +
                  formatted(message["payload"]) )
         with open(self.path_to_journal, "a") as f:
@@ -120,7 +120,7 @@ class Transceiver:
                  formatted(message["sender"]) + formatted(message["counter"]) +
                  formatted(message["payload"]) )
         with open(self.path_to_journal, 'a') as journal:
-            journal.write('\n'+journal_entry[:-1])
+            journal.write('\n'+entry[:-1])
 
     def find_name_from_addr(self, searched_addr:str):
         for name, ip in self.neighbors_addr_dict.items():
