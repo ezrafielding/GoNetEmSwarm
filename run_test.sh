@@ -64,11 +64,11 @@ find_container_for_node() {
 
 # Extract the node name (satN) from a full container name (ntmXXX.satN).
 node_from_container() {
-    echo "$1" | grep -oE 'sat[0-9]+$'
+    echo "$1" | grep -oE 'sat[0-9]+$' || true
 }
 
 gnd_from_container() {
-    echo "$1" | grep -oE 'gnd[0-9]+$'
+    echo "$1" | grep -oE 'gnd[0-9]+$' || true
 }
 
 
@@ -331,19 +331,41 @@ cmd_isl_tune() {
         local node
         node="$(node_from_container "$container")"
         [[ -n "$node" ]] || node="$(gnd_from_container "$container")"
-        for iface in eth0 eth1 eth2 eth3; do
-            docker exec "$container" bash -c "
-                if ip link show $iface &>/dev/null; then
-                    tc qdisc show dev $iface | grep -q tbf || exit 0
-                    rate=\$(tc qdisc show dev $iface | grep -oP 'rate \K\S+')
-                    lat=\$(tc qdisc show dev $iface | grep -oP 'lat \K\S+')
-                    tc qdisc change dev $iface parent 1:1 handle 10: tbf rate \${rate} burst ${burst}b lat \${lat} 2>/dev/null || true
-                fi
-            " 2>/dev/null
-        done
+        docker exec "$container" bash -c "
+            for iface in \$(ls /sys/class/net/ | grep -E '^eth[0-9]+$'); do
+                tc qdisc show dev \$iface | grep -q tbf || continue
+                rate=\$(tc qdisc show dev \$iface | grep -oP 'rate \K\S+')
+                lat=\$(tc qdisc show dev \$iface | grep -oP 'lat \K\S+')
+                tc qdisc change dev \$iface parent 1:1 handle 10: tbf rate \${rate} burst ${burst}b lat \${lat} 2>/dev/null || true
+            done
+        " 2>/dev/null
         echo "  ✓ $node"
     done
     echo "Done. ISL links now support packets up to ~${burst} bytes."
+}
+
+# ---------------------------------------------------------------------------
+# ISL link qdisc inspection — show TBF config on all ethN interfaces per node.
+# ---------------------------------------------------------------------------
+
+cmd_isl_show() {
+    mapfile -t sat_containers < <(find_sat_containers)
+    mapfile -t gnd_containers < <(find_gnd_containers)
+    local all_containers=("${sat_containers[@]}" "${gnd_containers[@]}")
+    [[ ${#all_containers[@]} -gt 0 ]] || die "No satellite or ground containers found."
+
+    for container in "${all_containers[@]}"; do
+        local node
+        node="$(node_from_container "$container")"
+        [[ -n "$node" ]] || node="$(gnd_from_container "$container")"
+        echo "--- $node ---"
+        docker exec "$container" bash -c "
+            for iface in \$(ls /sys/class/net/ | grep -E '^eth[0-9]+$'); do
+                result=\$(tc qdisc show dev \$iface 2>/dev/null)
+                echo \"  \$iface: \$result\"
+            done
+        "
+    done
 }
 
 # ---------------------------------------------------------------------------
@@ -385,6 +407,7 @@ case "$COMMAND" in
     archive)    cmd_archive "$@" ;;
     ospf-check) cmd_ospf_check ;;
     isl-tune)   cmd_isl_tune "$@" ;;
+    isl-show)   cmd_isl_show ;;
     help|--help|-h)
         sed -n '/^# Usage/,/^# -----------/p' "$0" | grep -v '^# ---' | sed 's/^# //'
         ;;
