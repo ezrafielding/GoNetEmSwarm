@@ -18,8 +18,7 @@ WAKEUP_TIME = 3  # seconds to wait for all nodes to start before using the netwo
 # ===========================================================================
 
 def formatted(value):
-    return " " + str(value) + " |"
-
+    return str(value)+"|"
 
 class Dumped(Exception):
     def __init__(self):
@@ -85,35 +84,50 @@ class Transceiver:
 
     def add_fst_line_journal(self) -> None:
         entry = (formatted("Local Time") + formatted("Event") +
-                 formatted("Ip Address") + formatted("Message Type") +
+                 formatted("Node Name") + formatted("Message Type") +
                  formatted("Message Sender") + formatted("Message Counter") +
-                 formatted("Message Payload"))
+                 formatted("Message Payload") )
         with open(self.path_to_journal, "a") as f:
-            f.write(entry[:-2])
+            f.write(entry[:-1])
 
     def add_rcv_journal(self, message: dict, addr: str) -> None:
         entry = (formatted(time.process_time()) + formatted("RCV") +
-                 formatted(addr) + formatted(message["type"]) +
+                 formatted(self.find_name_from_addr(addr)) + formatted(message["type"]) +
                  formatted(message["sender"]) + formatted(message["counter"]) +
-                 formatted(message["payload"]))
+                 formatted(message["payload"]) )
         with open(self.path_to_journal, "a") as f:
-            f.write("\n" + entry[:-2])
+            f.write("\n" + entry[:-1])
 
     def add_snt_journal(self, message: dict, addr: str) -> None:
         entry = (formatted(time.process_time()) + formatted("SNT") +
-                 formatted(addr) + formatted(message["type"]) +
+                 formatted(self.find_name_from_addr(addr)) + formatted(message["type"]) +
                  formatted(message["sender"]) + formatted(message["counter"]) +
-                 formatted(message["payload"]))
+                 formatted(message["payload"]) )
         with open(self.path_to_journal, "a") as f:
-            f.write("\n" + entry[:-2])
+            f.write("\n" + entry[:-1])
 
     def add_tra_journal(self, message: dict, addr: str) -> None:
         entry = (formatted(time.process_time()) + formatted("TRA") +
-                 formatted(addr) + formatted(message["type"]) +
+                 formatted(find_name_from_addr(addr)) + formatted(message["type"]) +
                  formatted(message["sender"]) + formatted(message["counter"]) +
-                 formatted(message["payload"]))
+                 formatted(message["payload"]) )
         with open(self.path_to_journal, "a") as f:
-            f.write("\n" + entry[:-2])
+            f.write("\n" + entry[:-1])
+
+    def add_dmp_journal(self, message, addr):
+        entry = (formatted(time.process_time()) + formatted("DMP") +
+                 formatted(self.find_name_from_addr(addr)) + formatted(message["type"]) +
+                 formatted(message["sender"]) + formatted(message["counter"]) +
+                 formatted(message["payload"]) )
+        with open(self.path_to_journal, 'a') as journal:
+            journal.write('\n'+journal_entry[:-1])
+
+    def find_name_from_addr(self, searched_addr:str):
+        for name, ip in self.neighbors_addr_dict.items():
+            if ip == searched_addr:
+                return name
+        return "gnd"
+
 
     def get_local_time(self) -> float:
         return time.process_time()
@@ -134,6 +148,11 @@ class Transceiver:
                 self.add_snt_journal(message, ip_addr)
         except Exception:
             self.write_log_debug("Send failed: " + traceback.format_exc())
+            pass  # never let the TX thread crash
+
+
+    def get_local_time(self):
+        return time.process_time()
 
     def increment_counter(self) -> None:
         self.msg_counter += 1
@@ -187,6 +206,7 @@ class Transceiver:
                 seen = self.historic_transmission.setdefault(sender, [])
                 if counter in seen:
                     self.write_log_debug("Duplicate — dumped")
+                    self.add_dmp_journal(message, addr[0])
                     raise Dumped()
                 seen.append(counter)
                 self.transmit(message, addr[0])

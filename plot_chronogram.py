@@ -4,7 +4,7 @@ import csv
 import os
 
 path="shared/logs/"
-prefix="journal_sat"
+prefix="journal_"
 suffix=".log"
 
 def readjournal(journame:str):
@@ -12,19 +12,19 @@ def readjournal(journame:str):
     with open(full_path, 'r') as csvfile:
         csvreader = csv.DictReader(csvfile, delimiter='|')
         sat_id=journame[len(prefix):-len(suffix)]
-        Coms[journame] = {'myAd':" 10.255.0."+sat_id+" ",'Ltime': [],'MsgCount':[],'pload':[],'sender':[],'evTyp':[], 'ipAd':[], 'name':"sat"+sat_id}
+        Coms[journame] = {'myAd':"10.255.0."+sat_id,'Ltime': [],'MsgCount':[],'pload':[],'sender':[],'evTyp':[], 'ipAd':[], 'name':"sat"+sat_id}
         for event in csvreader:
             ################################################################################################
             #MODIFY THE if event[' Message Type '] == ' 8 ': CONDITION IF YOU WANT TO HANDLE OTHER MESSAGES#
             ################################################################################################
 
-            if event[' Message Type '] == ' 8 ':
-                Coms[journame]['Ltime'].append(float(event[' Local Time ']))
-                Coms[journame]['MsgCount'].append(int(event[' Message Counter ']))
-                Coms[journame]['ipAd'].append(event[' Ip Address '])
-                Coms[journame]['pload'].append(event[' Message Payload'])
-                Coms[journame]['sender'].append(event[' Message Sender '])
-                Coms[journame]['evTyp'].append(event[' Event '])
+            if event['Message Type'] == '1':
+                Coms[journame]['Ltime'].append(float(event['Local Time']))
+                Coms[journame]['MsgCount'].append(int(event['Message Counter']))
+                Coms[journame]['ipAd'].append(event['Ip Address'])
+                Coms[journame]['pload'].append(event['Message Payload'])
+                Coms[journame]['sender'].append(event['Message Sender'])
+                Coms[journame]['evTyp'].append(event['Event'])
 
 def draw_baseline(axes, sat):
     offset = Coms[sat]["offset"]
@@ -56,13 +56,13 @@ def find_request_type(pload):
         return "Adopted"
     if "Rooted" in pload:
         return "Rooted"
-    return "Accept"
+    return "Ukn"
 
 
 def draw_recep(axes, satA, satB):
     for i in range(len(Coms[satA]['Ltime'])):
         message_idA = Coms[satA]['sender'][i]+str(Coms[satA]['MsgCount'][i])
-        if Coms[satA]['evTyp'][i]==' RCV ':
+        if Coms[satA]['evTyp'][i]=='RCV':
             for j in range(len(Coms[satB]['Ltime'])):
                 message_idB = Coms[satB]['sender'][j]+str(Coms[satB]['MsgCount'][j])
                 if message_idA == message_idB:

@@ -11,8 +11,11 @@ import random
 # ===========================================================================
 # Ground Station : basic implementation
 # ===========================================================================
+
+WAKEUP_TIME = 3
+
 def formatted(value):
-    return " "+str(value)+" |"
+    return str(value)+"|"
 
 class UnreachableSwarm(Exception):
     def __init__(self):
@@ -27,34 +30,31 @@ class Ground_transceiver:
         self.node_name: str = os.environ["HOSTNAME"]
         self.path_to_logs_debug = "/logs/network/trans_"+self.node_name+".log"
         self.path_to_journal = "/logs/journal_"+self.node_name+".log"
-        try:
-            self.gnd_id: int = int(os.environ["GND_ID"]) #ADD TO RUN TEST
-        except Exception:
-            self.write_log_debug("Unable to read GND_ID from environement :" + str(traceback.format_exc()) )
-            self.gnd_id = 2
 
         info = all_nodes[self.node_name]
 
         self.msg_counter = 0
-
         self.link_duration = 0
-
         self.net_port = 5007
         self.satellite_addr_list = []
         self.write_log_debug("Tranceiver started: "+ self.node_name)
 
-        for sat in info["neighbors"] :
-            self.satellite_addr_list.append(sat["link_ip"])
-            self.write_log_debug("Satellite added: "+ sat["name"] + " | link ip: "+ sat["link_ip"])
+        self.neighbors_addr_dict: dict[str, str] = {}
+        for neigh in info["neighbors"]:
+            self.neighbors_addr_dict[neigh["name"]] = neigh["link_ip"]
 
-        self.linked_address = None
+        self.linked_name = None
         self._stop_event = threading.Event()
         self._link_thread: threading.Thread | None = None
         self._tx_thread: threading.Thread | None = None
         self._tx_sock:   socket.socket    | None = None
 
+        self.write_log_debug("Ground Transceiver started: " + self.node_name)
+        for name, ip in self.neighbors_addr_dict.items():
+            self.write_log_debug("Neighbor: " + name + " link_ip=" + ip)
+
     def get_next_link(self):
-        return random.choice(self.satellite_addr_list)
+        return random.choice(list(self.neighbors_addr_dict.keys()))
 
     def set_link_duration(self, value: int):
         self.link_duration = value
@@ -63,16 +63,17 @@ class Ground_transceiver:
         with open(self.path_to_logs_debug, 'a') as log_file:
             log_file.write('\n'+str(self.get_local_time())+" "+service_name+" : "+log_message)
 
-    def send_packets(self, message: dict, ip_addr: str, transfert:bool = False):
+    def send_packets(self, message: dict, name: str, transfert:bool = False):
+        ip_addr = self.neighbors_addr_dict[name]
         self.write_log_debug("sending packet packet to " + ip_addr + " with content "+ str(message))
         try:
             data = json.dumps(message).encode('utf-8')
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as tx:
                 tx.sendto(data, (ip_addr, self.net_port))
             if transfert:
-                self.add_tra_journal(message, ip_addr)
+                self.add_tra_journal(message, name)
             else:
-                self.add_snt_journal(message, ip_addr)
+                self.add_snt_journal(message, name)
         except Exception:
             self.write_log_debug("Unable to send packets :" + str(traceback.format_exc()) )
             pass  # never let the TX thread crash
@@ -80,37 +81,29 @@ class Ground_transceiver:
     def get_local_time(self):
         return time.process_time()
 
-    def add_fst_line_journal(self):
-        journal_entry = formatted("Local Time") +\
-                        formatted("Event") +\
-                        formatted("Ip Address") +\
-                        formatted("Message Type") +\
-                        formatted("Message Sender") +\
-                        formatted("Message Counter") +\
-                        formatted("Message Payload")
-        with open(self.path_to_journal, 'a') as journal:
-            journal.write(journal_entry[:-2])
+    def add_fst_line_journal(self) -> None:
+        entry = (formatted("Local Time") + formatted("Event") +
+                 formatted("Node Name") + formatted("Message Type") +
+                 formatted("Message Sender") + formatted("Message Counter") +
+                 formatted("Message Payload") )
+        with open(self.path_to_journal, "a") as f:
+            f.write(entry[:-1])
 
-    def add_snt_journal(self, message, addr):
-        journal_entry = formatted(self.get_local_time()) +\
-                        formatted("SNT") +\
-                        formatted(addr) +\
-                        formatted(message["type"]) +\
-                        formatted(message["sender"]) +\
-                        formatted(message["counter"]) +\
-                        formatted(message["payload"])
-        self.write_log_debug(str(self.get_local_time()))
-        with open(self.path_to_journal, 'a') as journal:
-            journal.write('\n'+journal_entry[:-2])
+    def add_snt_journal(self, message: dict, name: str) -> None:
+        entry = (formatted(time.process_time()) + formatted("SNT") +
+                 formatted(name) + formatted(message["type"]) +
+                 formatted(message["sender"]) + formatted(message["counter"]) +
+                 formatted(message["payload"]) )
+        with open(self.path_to_journal, "a") as f:
+            f.write("\n" + entry[:-1])
 
     def increment_counter(self):
         self.msg_counter = self.msg_counter +1
 
     def send_unicast(self, payload: dict):
-        addr = self.linked_address
         self.increment_counter()
 
-        self.write_log_debug("Sending Unicast to : "+ addr)
+        self.write_log_debug("Sending Unicast to : "+ self.linked_name)
         message = {
             "type": 9,
             "sender": self.node_name,
@@ -118,7 +111,7 @@ class Ground_transceiver:
             "payload" : payload
         }
         try:
-            self.send_packets(message, addr)
+            self.send_packets(message, self.linked_name)
         except Exception:
             self.write_log_debug(traceback.format_exc())
             raise UnreachableSwarm
@@ -129,6 +122,8 @@ class Ground_transceiver:
         self._link_thread = threading.Thread(
             target=self._link_loop, daemon=True, name=f"{self.node_name}-link"
         )
+        self.write_log_debug("Waiting " + str(WAKEUP_TIME) + "s for network to settle")
+        time.sleep(WAKEUP_TIME)
         self._link_thread.start()
 
     def stop(self) -> None:
@@ -151,10 +146,10 @@ class Ground_transceiver:
         while not self._stop_event.is_set():
             try:
                 self.write_log_debug("Before")
-                self.linked_address = self.get_next_link()
+                self.linked_name = self.get_next_link()
                 self.write_log_debug("After")
 
-                self.write_log_debug("new linked satellite : "+ self.linked_address + " | Next satellite update in :" + str(self.link_duration) )
+                self.write_log_debug("new linked satellite : "+ self.linked_name + " | Next satellite update in :" + str(self.link_duration) )
 
                 time.sleep(self.link_duration)
 
