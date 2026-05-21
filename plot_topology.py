@@ -199,7 +199,6 @@ def plot_topology(all_nodes, results, out_path):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    import matplotlib.lines as mlines
     import matplotlib.patches as mpatches
 
     positions = compute_layout(all_nodes)
@@ -208,15 +207,6 @@ def plot_topology(all_nodes, results, out_path):
     fig, ax = plt.subplots(figsize=(14, 12))
     ax.set_aspect("equal")
     ax.axis("off")
-
-    sample = next(iter(all_nodes.values()))
-    ax.set_title(
-        f"Discovered topology  |  {sample.get('topology','?')}  ·  "
-        f"{len(all_nodes)} nodes  ·  ISL: {sample.get('isl_profile','?')}"
-        f"  ·  OSPF: {'on' if sample.get('ospf_enabled') else 'off'}\n"
-        f"{len(results)}/{len(all_nodes)} nodes reported",
-        fontsize=13, pad=16,
-    )
 
     for edge in declared:
         a, b = edge
@@ -242,8 +232,6 @@ def plot_topology(all_nodes, results, out_path):
         ax.plot([xa, xb], [ya, yb], color="#9b59b6", lw=1.5, linestyle="-.", zorder=2)
 
     node_r = 0.055
-    cx_all = sum(px for px, _ in positions.values()) / len(positions)
-    cy_all = sum(py for _, py in positions.values()) / len(positions)
     for name, (x, y) in positions.items():
         reported = name in results
         is_gnd = name.startswith("gnd")
@@ -268,35 +256,6 @@ def plot_topology(all_nodes, results, out_path):
                 ha="center", va="center",
                 fontsize=8, fontweight="bold", color="white", zorder=4)
 
-        dx, dy_ = x - cx_all, y - cy_all
-        norm = math.hypot(dx, dy_) or 1
-        lx = x + (dx / norm) * (node_r + 0.04)
-        ly = y + (dy_ / norm) * (node_r + 0.04)
-        ax.text(lx, ly, name, ha="center", va="center",
-                fontsize=7, color="#2c3e50", zorder=4)
-
-    legend_entries = [
-        mlines.Line2D([], [], color="#2ecc71", lw=2.5, label="Confirmed (both directions)"),
-        mlines.Line2D([], [], color="#e67e22", lw=2.0, linestyle="--", label="Partial (one direction)"),
-        mlines.Line2D([], [], color="#e74c3c", lw=1.5, linestyle=":", label="Declared but not discovered"),
-        mlines.Line2D([], [], color="#9b59b6", lw=1.5, linestyle="-.", label="Discovered but not declared"),
-        mpatches.Patch(facecolor="#2980b9", label="Satellite (reported)"),
-        mpatches.Patch(facecolor="#27ae60", label="Ground station (reported)"),
-        mpatches.Patch(facecolor="#95a5a6", label="Node (no report)"),
-    ]
-    ax.legend(handles=legend_entries, loc="lower center",
-              bbox_to_anchor=(0.5, -0.04), ncol=3, fontsize=9, framealpha=0.9)
-
-    total   = len(declared)
-    full    = sum(1 for v in confirmed.values() if v >= 2)
-    partial = sum(1 for v in confirmed.values() if v == 1)
-    missing = sum(1 for v in confirmed.values() if v == 0)
-    stats = (f"Edges: {total} declared  |  {full} confirmed  ·  "
-             f"{partial} partial  ·  {missing} missing"
-             + (f"  ·  {len(extra_discovered)} unexpected" if extra_discovered else ""))
-    ax.text(0.5, 0.01, stats, transform=ax.transAxes,
-            ha="center", va="bottom", fontsize=9, color="#555")
-
     plt.tight_layout()
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close()
@@ -307,11 +266,39 @@ def plot_topology(all_nodes, results, out_path):
 # Geographic map plot
 # ---------------------------------------------------------------------------
 
+def _antimeridian_segments(lon_a, lat_a, lon_b, lat_b):
+    """Split a lon/lat edge at ±180° if the shortest path crosses the antimeridian.
+
+    Returns a list of ([lons], [lats]) pairs, each safe to plot as a single line.
+    Without splitting, Matplotlib draws a straight line in projected coordinates
+    from e.g. 170° to -170°, which spans the entire map instead of the short hop.
+    """
+    dlon = lon_b - lon_a
+    if dlon > 180:
+        dlon -= 360
+    elif dlon < -180:
+        dlon += 360
+
+    lon_b_eff = lon_a + dlon
+
+    if lon_b_eff > 180:
+        t = (180.0 - lon_a) / dlon
+        lat_x = lat_a + t * (lat_b - lat_a)
+        return [([lon_a, 180.0], [lat_a, lat_x]),
+                ([-180.0, lon_b], [lat_x, lat_b])]
+    elif lon_b_eff < -180:
+        t = (-180.0 - lon_a) / dlon
+        lat_x = lat_a + t * (lat_b - lat_a)
+        return [([lon_a, -180.0], [lat_a, lat_x]),
+                ([180.0, lon_b], [lat_x, lat_b])]
+    else:
+        return [([lon_a, lon_b], [lat_a, lat_b])]
+
+
 def plot_topology_map(all_nodes, results, out_path):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    import matplotlib.lines as mlines
 
     try:
         import cartopy.crs as ccrs
@@ -346,20 +333,10 @@ def plot_topology_map(all_nodes, results, out_path):
         ax.set_facecolor("#cfe2f3")
         ax.set_xlim(-180, 180)
         ax.set_ylim(-90, 90)
-        ax.set_xlabel("Longitude (°)", fontsize=10)
-        ax.set_ylabel("Latitude (°)",  fontsize=10)
         ax.grid(True, linewidth=0.2, color="#bbbbbb", linestyle="--")
         plot_kw = {}
 
     fig.patch.set_facecolor("white")
-
-    sample = next(iter(all_nodes.values()))
-    ax.set_title(
-        f"Discovered topology  |  {sample.get('topology','?')}  ·  "
-        f"{len(all_nodes)} nodes  ·  ISL: {sample.get('isl_profile','?')}\n"
-        f"{len(results)}/{len(all_nodes)} nodes reported",
-        fontsize=13, pad=12,
-    )
 
     for edge in declared:
         a, b = edge
@@ -374,8 +351,9 @@ def plot_topology_map(all_nodes, results, out_path):
             color, lw, ls = "#ff7f0e", 0.8, "--"
         else:
             color, lw, ls = "#d62728", 0.7, ":"
-        ax.plot([xa, xb], [ya, yb],
-                color=color, lw=lw, linestyle=ls, alpha=0.8, zorder=2, **plot_kw)
+        for lons, lats in _antimeridian_segments(xa, ya, xb, yb):
+            ax.plot(lons, lats, color=color, lw=lw, linestyle=ls,
+                    alpha=0.8, zorder=2, **plot_kw)
 
     for edge in extra_discovered:
         a, b = edge
@@ -383,8 +361,9 @@ def plot_topology_map(all_nodes, results, out_path):
             continue
         xa, ya = positions[a]
         xb, yb = positions[b]
-        ax.plot([xa, xb], [ya, yb],
-                color="#9467bd", lw=0.7, linestyle="-.", alpha=0.7, zorder=2, **plot_kw)
+        for lons, lats in _antimeridian_segments(xa, ya, xb, yb):
+            ax.plot(lons, lats, color="#9467bd", lw=0.7, linestyle="-.",
+                    alpha=0.7, zorder=2, **plot_kw)
 
     sat_rep   = [(lon, lat) for n, (lon, lat) in positions.items()
                  if not n.startswith("gnd") and n in results]
@@ -398,10 +377,10 @@ def plot_topology_map(all_nodes, results, out_path):
     scatter_kw = {"zorder": 5, **({"transform": transform} if HAS_CARTOPY else {})}
     if sat_rep:
         ax.scatter([p[0] for p in sat_rep],   [p[1] for p in sat_rep],
-                   s=12, color="#1f77b4", **scatter_kw)
+                   s=70, color="#1f77b4", **scatter_kw)
     if sat_norep:
         ax.scatter([p[0] for p in sat_norep], [p[1] for p in sat_norep],
-                   s=12, color="#aaaaaa", **scatter_kw)
+                   s=70, color="#aaaaaa", **scatter_kw)
     if gnd_rep:
         ax.scatter([p[0] for p in gnd_rep],   [p[1] for p in gnd_rep],
                    s=40, color="#d62728", marker="^", zorder=6,
@@ -410,35 +389,6 @@ def plot_topology_map(all_nodes, results, out_path):
         ax.scatter([p[0] for p in gnd_norep], [p[1] for p in gnd_norep],
                    s=40, color="#aaaaaa", marker="^", zorder=6,
                    **({"transform": transform} if HAS_CARTOPY else {}))
-
-    legend_entries = [
-        mlines.Line2D([], [], color="#2ca02c", lw=1.2,
-                      label="Confirmed (both directions)"),
-        mlines.Line2D([], [], color="#ff7f0e", lw=1.0, linestyle="--",
-                      label="Partial (one direction)"),
-        mlines.Line2D([], [], color="#d62728", lw=0.8, linestyle=":",
-                      label="Declared but not discovered"),
-        mlines.Line2D([], [], color="#9467bd", lw=0.8, linestyle="-.",
-                      label="Discovered but not declared"),
-        mlines.Line2D([], [], color="#1f77b4", marker="o", markersize=6,
-                      linestyle="None", label="Satellite (reported)"),
-        mlines.Line2D([], [], color="#d62728", marker="^", markersize=7,
-                      linestyle="None", label="Ground station (reported)"),
-        mlines.Line2D([], [], color="#aaaaaa", marker="o", markersize=6,
-                      linestyle="None", label="Node (no report)"),
-    ]
-    legend = ax.legend(handles=legend_entries, loc="lower left",
-                       fontsize=9, framealpha=0.9)
-
-    total   = len(declared)
-    full    = sum(1 for v in confirmed.values() if v >= 2)
-    partial = sum(1 for v in confirmed.values() if v == 1)
-    missing = sum(1 for v in confirmed.values() if v == 0)
-    stats = (f"Edges: {total} declared  |  {full} confirmed  ·  "
-             f"{partial} partial  ·  {missing} missing"
-             + (f"  ·  {len(extra_discovered)} unexpected" if extra_discovered else ""))
-    ax.text(0.5, 0.01, stats, transform=ax.transAxes,
-            ha="center", va="bottom", fontsize=9, color="#444")
 
     plt.tight_layout()
     plt.savefig(out_path, dpi=300, bbox_inches="tight",
