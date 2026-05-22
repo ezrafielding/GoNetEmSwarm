@@ -2,6 +2,15 @@
 
 ## New Stuff :
 
+### Plot Chronogram:
+python plot_choronogram.py \[--name -n str\] \[--type-to-plot -t \["Global", "Unicast", "RBcast", "SBcast", "Tree", "EarthToSwarm"\]\] \[--ground-station -g \[True, False\]\]
+name to choose the name that will be displayed on top of the graphic,
+type-to-plot if you want to include only a particular type of message (for example, if you only want to show the instances of Reliable Broadcast messages, use -t "RBcast").
+ground-station true if you want to include the ground stations as an independant line. If false, gound stations message reception will be only shown by a dot titled "gnd"
+it should look like this:
+  ![ex](./data/Figure_1.png)
+
+
 ### Ground Station :
 #### Basic usage :
 use generate_topology.py with the argument --ground_station or -g to generate a topology with a certain number of ground stations.
@@ -72,7 +81,6 @@ You can either do your own logging or use the already existent ones:
 please note that there is no global time measure, only local time. (As global time is kinda irrelevant in our context)
 - The script plot_chronogram.py read journals entry and represent them in a chrornogram format, much more readable, with every nodes on the same figure. Rn it in probably not pretty enough to be used in a regular paper, but It can still help for debugging purpose
 it looks like this : 
-  ![ex](./mono_tree_full_mesh_5.png)
 ## Most important :
 I recently stumbled a lot because I wasn't aware that in the current model, communication isn't FIFO. please beware of that (a FIFO version is comming soon)
 If you got any issues, I am probably not very far away, don't hesitate to reach out to me !
