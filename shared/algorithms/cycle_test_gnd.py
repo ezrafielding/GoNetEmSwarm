@@ -15,7 +15,7 @@ class cycle_unicast(Ground_transceiver):
         try:
             super().__init__()
             self.write_log("Test broadcast service started")
-            self.set_link_duration(5)
+            self.set_link_duration(4)
             self.link_order_list = list(self.neighbors_addr_dict.keys()).copy()
             random.shuffle(self.link_order_list)
             self.write_log("random link order : "+ str(self.link_order_list))
@@ -60,11 +60,11 @@ class cycle_unicast(Ground_transceiver):
 
 algo = cycle_unicast()
 algo.start()
-time.sleep(4)
+time.sleep(8)
 #For my test their is 5 linked satellites, so range 5 to check if each one is only called once.
 algo.write_log("Started !")
 
-for i in range(5):
+for i in range(1):
     try:
         algo.write_log("message number : " + str(i) + " trying to send to : "+ algo.linked_name+ " .")
         algo.send_unicast({"from": algo.node_name, "message": "Hello World "+str(i)+" from : "+ algo.node_name })

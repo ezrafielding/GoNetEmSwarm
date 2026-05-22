@@ -44,10 +44,10 @@ while(not algo.network_initialized):
     time.sleep(1)
 algo.write_log("Ready.")
 
-while ((algo.brd_counter + algo.gnd_counter) < algo.totalmsg):
+while (algo.brd_counter < 3 and algo.gnd_counter < 1) :
     try:
         time.sleep(4)
-        algo.write_log("waiting for all messages, message received : " + str(algo.brd_counter) +  str(algo.gnd_counter) + " / " + str(algo.totalmsg)  )
+        algo.write_log("waiting for all messages, message received : " + str(algo.brd_counter) +  str(algo.gnd_counter) + " / 4" )
     except Exception:
         algo.write_log(traceback.format_exc())
 #

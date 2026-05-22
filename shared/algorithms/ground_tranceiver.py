@@ -145,10 +145,7 @@ class Ground_transceiver:
     def _link_loop(self) -> None:
         while not self._stop_event.is_set():
             try:
-                self.write_log_debug("Before")
                 self.linked_name = self.get_next_link()
-                self.write_log_debug("After")
-
                 self.write_log_debug("new linked satellite : "+ self.linked_name + " | Next satellite update in :" + str(self.link_duration) )
 
                 time.sleep(self.link_duration)

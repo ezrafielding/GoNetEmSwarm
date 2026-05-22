@@ -42,7 +42,7 @@ Messages are dictionaries with the following items :
 Thanks to the self.send_broadcast(payload: dict) method.
 Reliable => use a big amount of message to communicate (~2*n where n is the number of links in the network graph) but ensure that every node in the same connected graph as the sender will get the message.
 
-### Unicast :
+### [DEPRECATED - NO MORE OSPF] Unicast :
 Thanks to the self.send_unicast(payload: dict, addr:str) method. (addr is the loopback ip of the node you want to send the message to.)
 With big Networks (About >= 100 Nodes) I am experimenting some message losses, I think that furthest away nodes pair are to far away to reach each others due to short TTL(Time To Live) of packets.
 

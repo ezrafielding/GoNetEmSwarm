@@ -41,7 +41,7 @@ class Transceiver:
         payload: dict  — algorithm-specific data
     """
 
-    _RX_TIMEOUT = 1.0  # recvfrom block duration; also caps stop() wait time
+    _RX_TIMEOUT = 3.0  # recvfrom block duration; also caps stop() wait time
 
     def __init__(self, config_path: str = "/algorithms/node_configs.json"):
         with open(config_path) as f:
@@ -90,6 +90,12 @@ class Transceiver:
         with open(self.path_to_journal, "a") as f:
             f.write(entry[:-1])
 
+    def find_name_from_addr(self, searched_addr:str):
+        for name, ip in self.neighbors_addr_dict.items():
+            if ip == searched_addr:
+                return name
+        return "gnd"
+
     def add_rcv_journal(self, message: dict, addr: str) -> None:
         entry = (formatted(time.process_time()) + formatted("RCV") +
                  formatted(self.find_name_from_addr(addr)) + formatted(message["type"]) +
@@ -121,12 +127,6 @@ class Transceiver:
                  formatted(message["payload"]) )
         with open(self.path_to_journal, 'a') as journal:
             journal.write('\n'+entry[:-1])
-
-    def find_name_from_addr(self, searched_addr:str):
-        for name, ip in self.neighbors_addr_dict.items():
-            if ip == searched_addr:
-                return name
-        return "gnd"
 
 
     def get_local_time(self) -> float:
@@ -199,6 +199,7 @@ class Transceiver:
         match message["type"]:
             case 0:
                 self.write_log_debug("Unicast received")
+                self.add_rcv_journal(message, addr[0])
             case 1:
                 self.write_log_debug("Reliable broadcast received")
                 sender  = message["sender"]
@@ -209,9 +210,11 @@ class Transceiver:
                     self.add_dmp_journal(message, addr[0])
                     raise Dumped()
                 seen.append(counter)
+                self.add_rcv_journal(message, addr[0])
                 self.transmit(message, addr[0])
             case _:
                 self.write_log_debug("Unknown message type: " + str(message["type"]))
+                self.add_rcv_journal(message, addr[0])
 
     # ------------------------------------------------------------------
     # RX callback — override in subclasses
@@ -279,11 +282,11 @@ class Transceiver:
                 try:
                     self.write_log_debug("RX OSError: " + str(e))
                 except Exception:
+                    self.write_log_debug(traceback.format_exc())
                     pass
                 continue
             try:
                 message = json.loads(data.decode("utf-8"))
-                self.add_rcv_journal(message, addr[0])
                 self.message_handler(message, addr)
                 self.on_message(message, addr[0])
             except Dumped:

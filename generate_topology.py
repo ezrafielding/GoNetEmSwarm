@@ -499,86 +499,86 @@ def generate(
         }
         if node_positions and i in node_positions:
             node_infos[nd]["position"] = node_positions[i]
+    if (nb_gnd_station > 0):
+        for i, ng in enumerate(station, start=1):
+            lo_ip   = loopback_ip(n+i, with_prefix=True)
+            lo_addr = loopback_ip(n+i, with_prefix=False)
 
-    for i, ng in enumerate(station, start=1):
-        lo_ip   = loopback_ip(n+i, with_prefix=True)
-        lo_addr = loopback_ip(n+i, with_prefix=False)
+            iface_frr_lines = []
+            ospf_networks   = [lo_ip]
+            neighbors       = []
 
-        iface_frr_lines = []
-        ospf_networks   = [lo_ip]
-        neighbors       = []
+            for (link_idx, is_peer1, eth_idx, with_gnd) in gnd_ifaces[ng]:
+                subnet, peer1_ip, peer2_ip = link_addresses(link_idx)
+                my_ip      = peer1_ip if is_peer1 else peer2_ip
+                their_ip   = (peer2_ip if is_peer1 else peer1_ip).split("/")[0]
 
-        for (link_idx, is_peer1, eth_idx, with_gnd) in gnd_ifaces[ng]:
-            subnet, peer1_ip, peer2_ip = link_addresses(link_idx)
-            my_ip      = peer1_ip if is_peer1 else peer2_ip
-            their_ip   = (peer2_ip if is_peer1 else peer1_ip).split("/")[0]
+                neighbor_idx = len(neighbors)+1
+                neighbor_nd  = node_name(neighbor_idx)
+                neighbor_lo  = loopback_ip(neighbor_idx, with_prefix=False)
 
-            neighbor_idx = len(neighbors)+1
-            neighbor_nd  = node_name(neighbor_idx)
-            neighbor_lo  = loopback_ip(neighbor_idx, with_prefix=False)
+                neighbors.append({
+                    "name":        neighbor_nd,
+                    "id":          neighbor_idx,
+                    "eth":         eth_idx,
+                    "link_ip":     their_ip,
+                    "loopback_ip": neighbor_lo,
+                })
 
-            neighbors.append({
-                "name":        neighbor_nd,
-                "id":          neighbor_idx,
-                "eth":         eth_idx,
-                "link_ip":     their_ip,
-                "loopback_ip": neighbor_lo,
-            })
+                iface_frr_lines += [f"interface eth{eth_idx}", f" ip address {my_ip}"]
+                if ospf:
+                    iface_frr_lines += [
+                        " ip ospf network point-to-point",
+                        " ip ospf hello-interval 10",
+                        " ip ospf dead-interval 40",
+                    ]
+                if multicast:
+                    iface_frr_lines.append(" ip pim")
+                iface_frr_lines.append("!")
+                ospf_networks.append(subnet)
 
-            iface_frr_lines += [f"interface eth{eth_idx}", f" ip address {my_ip}"]
+            # Build frr.conf
+            lo_pim_line = [" ip pim"] if multicast else []
+            frr_lines = [
+                "! -*- frr default configuration -*-",
+                "!",
+                "service integrated-vtysh-config",
+                "!",
+                f"hostname {nd}",
+                "!",
+                "interface lo",
+                f" ip address {lo_ip}",
+            ] + lo_pim_line + [
+                "!",
+            ] + iface_frr_lines
+
             if ospf:
-                iface_frr_lines += [
-                    " ip ospf network point-to-point",
-                    " ip ospf hello-interval 10",
-                    " ip ospf dead-interval 40",
+                frr_lines += [
+                    "router ospf",
+                    f" ospf router-id {lo_addr}",
+                    " passive-interface lo",
                 ]
+                for net in ospf_networks:
+                    frr_lines.append(f" network {net} area 0")
+                frr_lines.append("!")
+
             if multicast:
-                iface_frr_lines.append(" ip pim")
-            iface_frr_lines.append("!")
-            ospf_networks.append(subnet)
+                frr_lines += ["ip multicast-routing", "!"]
 
-        # Build frr.conf
-        lo_pim_line = [" ip pim"] if multicast else []
-        frr_lines = [
-            "! -*- frr default configuration -*-",
-            "!",
-            "service integrated-vtysh-config",
-            "!",
-            f"hostname {nd}",
-            "!",
-            "interface lo",
-            f" ip address {lo_ip}",
-        ] + lo_pim_line + [
-            "!",
-        ] + iface_frr_lines
+            frr_lines += ["line vty", "!"]
+            frr_configs[ng] = "\n".join(frr_lines) + "\n"
 
-        if ospf:
-            frr_lines += [
-                "router ospf",
-                f" ospf router-id {lo_addr}",
-                " passive-interface lo",
-            ]
-            for net in ospf_networks:
-                frr_lines.append(f" network {net} area 0")
-            frr_lines.append("!")
-
-        if multicast:
-            frr_lines += ["ip multicast-routing", "!"]
-
-        frr_lines += ["line vty", "!"]
-        frr_configs[ng] = "\n".join(frr_lines) + "\n"
-
-        node_infos[ng] = {
-            "id":                i+n,
-            "name":              ng,
-            "loopback_ip":       lo_addr,
-            "neighbors":         neighbors,
-            "ospf_enabled":      ospf,
-            "multicast_enabled": multicast,
-            "multicast_group":   MCAST_GROUP if multicast else None,
-            "multicast_port":    MCAST_PORT  if multicast else None,
-            "isl_profile":       isl_profile,
-        }
+            node_infos[ng] = {
+                "id":                i+n,
+                "name":              ng,
+                "loopback_ip":       lo_addr,
+                "neighbors":         neighbors,
+                "ospf_enabled":      ospf,
+                "multicast_enabled": multicast,
+                "multicast_group":   MCAST_GROUP if multicast else None,
+                "multicast_port":    MCAST_PORT  if multicast else None,
+                "isl_profile":       isl_profile,
+            }
 
 
     return network_yml, frr_configs, node_infos
