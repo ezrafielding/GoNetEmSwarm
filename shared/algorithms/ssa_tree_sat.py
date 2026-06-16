@@ -22,11 +22,13 @@ import csv
 import os
 import threading
 import time
+from tranceiver import Dumped
 from tranceiver_tree import Tranceiver_with_mono_tree
 
 parser = argparse.ArgumentParser(description="SSA CRDT tree satellite")
 parser.add_argument("--updates", type=int, default=1)         # accepted, unused
 parser.add_argument("--update-interval", type=int, default=30) # accepted, unused
+parser.add_argument("--object-id", type=str, default="1998-067A")  # accepted, unused
 args = parser.parse_args()
 
 _CRDT_TYPE = "lww_assign"
@@ -47,12 +49,14 @@ class SsaTreeSat(Tranceiver_with_mono_tree):
     # LWW merge
     # ------------------------------------------------------------------
 
-    def _apply(self, item_id: str, value, timestamp: int) -> bool:
+    def _apply(self, item_id: str, value, timestamp: int, source: str = "") -> bool:
+        """Apply a LWW update.  Uses >= so same-timestamp ties replace (last writer wins).
+        Returns True if local state changed."""
         updated = False
         with self._lock:
             entry = self._store.get(item_id)
-            if entry is None or timestamp > entry["timestamp"]:
-                self._store[item_id] = {"value": value, "timestamp": timestamp}
+            if entry is None or timestamp >= entry["timestamp"]:
+                self._store[item_id] = {"value": value, "timestamp": timestamp, "source": source}
                 updated = True
         if updated:
             self.write_log_debug(f"CRDT_UPD id={item_id} ts={timestamp}", "SsaTreeSat")
@@ -72,22 +76,66 @@ class SsaTreeSat(Tranceiver_with_mono_tree):
                 writer.writerow([item_id, obj_name, epoch, entry["timestamp"]])
 
     # ------------------------------------------------------------------
-    # Message handler
+    # Message handlers
     # ------------------------------------------------------------------
+
+    def message_handler(self, message: dict, addr) -> None:
+        """Override for type=2: decide whether to forward before touching local state.
+
+        Forward if incoming_ts >= local_ts, EXCEPT when it is a true duplicate
+        (same version from the same broadcast origin).  Drop stale updates
+        (incoming_ts < local_ts) so a node already at version 3 never re-forwards
+        version 2.
+        """
+        if message.get("type") == 2 and message.get("payload", {}).get("type") == _CRDT_TYPE:
+            payload = message["payload"]
+            item_id = payload["id"]
+            ts      = payload["timestamp"]
+            sender  = message["sender"]
+
+            with self._lock:
+                current = self._store.get(item_id)
+            local_ts  = current["timestamp"] if current else -1
+            local_src = current.get("source", "") if current else ""
+
+            if ts < local_ts:
+                # Stale — already superseded, no node needs this version.
+                self.write_log_debug(
+                    f"CRDT_OLD id={item_id} ts={ts}<{local_ts} — dropped", "SsaTreeSat"
+                )
+                raise Dumped()
+            elif ts == local_ts and local_src == sender:
+                # True duplicate — same version, same broadcast origin.
+                self.write_log_debug(
+                    f"CRDT_DUP id={item_id} ts={ts} origin={sender} — dropped", "SsaTreeSat"
+                )
+                raise Dumped()
+            else:
+                # ts > local_ts  →  new version; apply and forward.
+                # ts == local_ts, different origin  →  LWW tie: replace and forward.
+                self._apply(item_id, payload["value"], ts, source=sender)
+                self._forward_tree(message, addr[0])
+        else:
+            super().message_handler(message, addr)
 
     def on_message(self, data: dict, addr: str) -> None:
         msg_type = data.get("type")
         payload  = data.get("payload", {})
 
         if msg_type == 9:
-            # Ground uplink to root: wait for tree then tree-broadcast.
+            # Ground uplink: apply locally; only tree-broadcast if this is a new update.
             item_id   = payload["id"]
             value     = payload["value"]
             timestamp = payload["timestamp"]
             self.write_log_debug(
                 f"Ground SSA uplink: id={item_id} ts={timestamp}", "SsaTreeSat"
             )
-            self._apply(item_id, value, timestamp)
+            if not self._apply(item_id, value, timestamp, source=self.node_name):
+                self.write_log_debug(
+                    f"type=9 stale/dup id={item_id} ts={timestamp} — skipping broadcast",
+                    "SsaTreeSat",
+                )
+                return
 
             deadline = time.monotonic() + _TREE_WAIT
             while not self.tree_finished:
@@ -106,9 +154,7 @@ class SsaTreeSat(Tranceiver_with_mono_tree):
                 "timestamp": timestamp,
             })
 
-        elif payload.get("type") == _CRDT_TYPE:
-            # Tree relay (type=2): already forwarded; just merge locally.
-            self._apply(payload["id"], payload["value"], payload["timestamp"])
+        # type=2 with lww_assign is fully handled in message_handler (apply + forward)
 
 
 algo = SsaTreeSat()

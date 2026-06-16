@@ -153,9 +153,12 @@ Awareness (SSA) catalog update across a 66-satellite Iridium-like swarm.
 | Control | Direct uplink to every satellite individually | N (one per satellite) |
 | CRDT Flood | One uplink to sat1; reliable flood via ISL | 1 |
 | CRDT Tree | One uplink to sat1; spanning-tree broadcast via ISL | 1 |
+| Concurrent CRDT Tree | K uplinks to K spread-out satellites simultaneously; tree broadcast | K |
 
 The key claim: CRDTs reduce the required ground communication from N to 1 per
-catalog update, regardless of swarm size.
+catalog update, regardless of swarm size.  The concurrent test additionally shows
+that CRDT-aware deduplication keeps ISL traffic sub-linear even when multiple
+updates are injected simultaneously from different network endpoints.
 
 ### Topology
 
@@ -208,20 +211,96 @@ Each case has paired `_sat` / `_gnd` scripts launched together via `fullstart`.
 ./run_test.sh archive tree
 ```
 
+**Case 4 – Concurrent CRDT Tree** (N start-point satellites, no delay between sends):
+
+This case injects N versions of the same tracked object into N different satellites
+simultaneously, with no delay between sends.  The goal is to show that CRDT-aware
+deduplication keeps ISL traffic sub-linear even when multiple conflicting updates
+are in flight across the network at the same time.
+
+Satellite endpoints are selected by spreading N indices evenly across the 66-satellite
+pool using the formula:
+
+```
+endpoint[i] = sat{ 1 + round(i × (66 − 1) / (N − 1)) }   for i = 0 … N−1
+```
+
+Examples:
+- N=1  → [sat1]
+- N=3  → [sat1, sat34, sat66]
+- N=5  → [sat1, sat17, sat33, sat50, sat66]
+- N=10 → [sat1, sat8, sat15, sat23, sat30, sat37, sat44, sat52, sat59, sat66]
+
+Each endpoint receives a strictly newer version than the previous one: endpoint[0]
+gets ts=1, endpoint[1] gets ts=2, …, endpoint[N−1] gets ts=N.  Each send uses a
+different sequential GP entry for the chosen object from `data/test.json`, so the
+value (orbital data) differs across sends as well.  In the end the whole network
+converges to ts=N.
+
+The sends are logically simultaneous: the ground script issues all N uplinks with no
+`sleep` between them.  Because ISL propagation is much slower than the ground
+uplink rate, the earlier updates are still spreading through the network when later
+ones are injected, creating genuine in-flight conflicts for the dedup logic to resolve.
+
+Archive each run into `shared/logs/concurrent_N/`:
+
+```bash
+./run_test.sh clean && ./run_test.sh isl-tune
+./run_test.sh fullstart concurrent_tree --updates 1
+# wait ~120 s, then:
+./run_test.sh archive concurrent_1
+
+./run_test.sh clean && ./run_test.sh isl-tune
+./run_test.sh fullstart concurrent_tree --updates 5
+./run_test.sh archive concurrent_5
+
+./run_test.sh clean && ./run_test.sh isl-tune
+./run_test.sh fullstart concurrent_tree --updates 10
+./run_test.sh archive concurrent_10
+
+./run_test.sh clean && ./run_test.sh isl-tune
+./run_test.sh fullstart concurrent_tree --updates 20
+./run_test.sh archive concurrent_20
+```
+
+Results for the 66-satellite Iridium-graph topology:
+
+| N updates | GS msgs | ISL data msgs | Naive ISL | Saving | Convergence |
+|-----------|---------|---------------|-----------|--------|-------------|
+| 1         | 1       | 65            | 65        | —      | OK (v1)     |
+| 5         | 5       | 197           | 325       | 39%    | OK (v5)     |
+| 10        | 10      | 235           | 650       | 64%    | OK (v10)    |
+| 20        | 20      | 346           | 1300      | 73%    | OK (v20)    |
+
+Naive ISL = N × 65 (what N independent non-deduplicating floods would cost).
+ISL data excludes the one-time spanning-tree setup overhead (type=8, 354 messages).
+
+Generate the scalability bar chart:
+
+```bash
+python3 plot_concurrent.py \
+    --base-dir shared/logs \
+    --output shared/logs/concurrent_scalability.pdf
+```
+
 ### Parameters
 
 | Parameter | Scripts | Default | Description |
 |---|---|---|---|
-| `--updates N` | all gnd scripts | 1 | Number of catalog entries to send |
+| `--updates N` | all gnd scripts | 1 | Number of catalog entries / start points to send |
 | `--update-interval S` | `ssa_crdt_gnd`, `ssa_tree_gnd` | 30 | Seconds between consecutive sends |
+| `--object-id ID` | `ssa_tree_gnd`, `concurrent_tree_gnd` | `1998-067A` | NORAD object ID to use (ISS by default) |
 
-`--updates N` cycles through the first N entries of `data/test.json`.  When the
-same object ID appears more than once (after the first 5 entries), the ground
-increments a per-item counter that becomes the LWW timestamp, so each
-re-send strictly wins over the previous version at every satellite.
+For Cases 1–3, `--updates N` sends N sequential GP entries cycling through
+`data/test.json`.  For Case 4 (concurrent tree), `--updates N` selects N
+start-point satellites and sends one GP entry per start point (ts=1…ts=N),
+with no delay between sends.
 
-The `--updates` flag is also accepted (and ignored) by the satellite scripts so
-that `fullstart` can pass it to both sides without error.
+`--object-id` filters `data/test.json` to a specific tracked object so that
+each sequential send uses genuinely different orbital data for the same NORAD ID.
+
+The `--updates` and `--object-id` flags are accepted (and ignored) by all
+satellite scripts so that `fullstart` can pass them to both sides without error.
 
 Example with 3 updates:
 
@@ -233,31 +312,44 @@ Total GS messages will be 3 for CRDT cases and 3 × 66 = 198 for the control.
 
 ### Generating the results table
 
-After archiving all three cases:
+After archiving all cases:
 
 ```bash
 python3 shared/algorithms/analyze_ssa.py \
     shared/logs/control \
     shared/logs/crdt \
-    shared/logs/tree
+    shared/logs/tree \
+    shared/logs/concurrent \
+    shared/logs
 ```
+
+The 4th argument is the Case 4 archive directory; the 5th is the base directory
+containing the `concurrent_1/`, `concurrent_5/`, `concurrent_10/`, and
+`concurrent_20/` subdirectories used for the scalability table.  Both are
+optional — omit them to compare only the first three cases.
 
 Output includes:
 
 - **Message counts table** — GS messages, ISL messages, and total per case.
-  For Case 3 a second row shows ISL messages excluding spanning-tree setup
-  traffic (type=8), which is a one-time overhead amortized across many updates.
-- **Catalog convergence check** — reads `catalog_sat*.csv` from each archive
-  and confirms every satellite converged to the same catalog state (same item
-  IDs and LWW versions).  Any divergence is printed item-by-item.
+  For Cases 3 and 4 a second row shows ISL messages excluding spanning-tree
+  setup traffic (type=8), which is a one-time overhead amortized across many
+  updates.
+- **Catalog convergence check** — reads `catalog_sat*.csv` (or
+  `catalog_conc_sat*.csv` for Case 4) from each archive and confirms every
+  satellite converged to the same catalog state (same item IDs and LWW
+  versions).  Any divergence is printed item-by-item.
+- **Concurrent update scalability table** — ISL data messages vs N for
+  N=1/5/10/20, including naive baseline and saving percentage.
 
 ### Output files per node
 
 | File | Location | Contents |
 |---|---|---|
-| `gnd_ssa_<case>.log` | `shared/logs/` | Ground sends: `SNT\|<target>\|<counter>\|id=…\|ts=…` |
+| `gnd_ssa_<case>.log` | `shared/logs/` | Ground sends (Cases 1–3): `SNT\|<target>\|<counter>\|id=…\|ts=…` |
+| `gnd_concurrent_tree.log` | `shared/logs/` | Ground sends (Case 4): same format, one line per start-point |
 | `journal_<node>.log` | `shared/logs/` | Every RCV / SNT / TRA event with local timestamp |
-| `catalog_<node>.csv` | `shared/logs/` | Final catalog snapshot: item_id, object_name, epoch, version |
+| `catalog_<node>.csv` | `shared/logs/` | Final catalog snapshot (Cases 1–3): item_id, object_name, epoch, version |
+| `catalog_conc_<node>.csv` | `shared/logs/` | Final catalog snapshot (Case 4): same columns |
 
 ### Verifying ISL message counts
 
@@ -295,14 +387,26 @@ print(f'N={N}  E={E}  flood={2*E - N + 1}  tree={N-1}')
 All satellite scripts implement the same Last-Write-Wins register:
 
 ```
-update  assign(id, value, timestamp):
-    if store[id] is empty or timestamp > store[id].timestamp:
-        store[id] = {value, timestamp}
+update  assign(id, value, timestamp, source):
+    if store[id] is empty or timestamp >= store[id].timestamp:
+        store[id] = {value, timestamp, source}
 ```
 
-The ground is the sole timestamp authority: it increments a per-item counter
-each time the same object ID is sent.  Out-of-order ISL delivery is handled
-correctly because a lower-timestamp copy arriving late is silently dropped.
+`source` is the satellite that first injected this broadcast (the ground-uplink
+recipient), not the current relay hop.  It is preserved unchanged as the message
+travels across the tree.
+
+The `>=` rule means a same-timestamp message from a *different* source always
+replaces the local copy (last writer wins on ties).  ISL forwarding drops a
+message only in two cases:
+
+1. `incoming_ts < local_ts` — stale; a newer version is already stored.
+2. `incoming_ts == local_ts` **and** `incoming_source == local_source` — true
+   duplicate; the same broadcast wave has already passed through this node.
+
+The ground is the sole timestamp authority: it assigns ts=1 to the first
+start-point, ts=2 to the second, and so on, so each new send strictly wins at
+every satellite that has not yet received it.
 
 ---
 

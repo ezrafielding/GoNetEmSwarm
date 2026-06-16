@@ -7,8 +7,9 @@ On receiving a direct SSA uplink from the ground (type=9):
     broadcast with deduplication handled by the Transceiver base class).
 
 On receiving a CRDT relay broadcast from an ISL neighbour (type=1, lww_assign):
-  - Relay was already forwarded by message_handler before on_message is called.
-  - Apply LWW merge locally.
+  - message_handler applies CRDT-aware dedup: forward iff the message updates
+    local state (stale and true-duplicate messages are dropped).
+  - on_message is not used for this path.
 
 After each successful merge the catalog CSV is overwritten so the final state
 is always visible in the logs.
@@ -18,11 +19,12 @@ import argparse
 import csv
 import threading
 import time
-from tranceiver import Transceiver
+from tranceiver import Dumped, Transceiver
 
 parser = argparse.ArgumentParser(description="SSA CRDT flood satellite")
 parser.add_argument("--updates", type=int, default=1)         # accepted, unused
 parser.add_argument("--update-interval", type=int, default=30) # accepted, unused
+parser.add_argument("--object-id", type=str, default="1998-067A")  # accepted, unused
 args = parser.parse_args()
 
 _CRDT_TYPE = "lww_assign"
@@ -40,12 +42,12 @@ class SsaCrdtSat(Transceiver):
     # LWW merge
     # ------------------------------------------------------------------
 
-    def _apply(self, item_id: str, value, timestamp: int) -> bool:
+    def _apply(self, item_id: str, value, timestamp: int, source: str = "") -> bool:
         updated = False
         with self._lock:
             entry = self._store.get(item_id)
-            if entry is None or timestamp > entry["timestamp"]:
-                self._store[item_id] = {"value": value, "timestamp": timestamp}
+            if entry is None or timestamp >= entry["timestamp"]:
+                self._store[item_id] = {"value": value, "timestamp": timestamp, "source": source}
                 updated = True
         if updated:
             self.write_log_debug(f"CRDT_UPD id={item_id} ts={timestamp}", "SsaCrdtSat")
@@ -65,8 +67,39 @@ class SsaCrdtSat(Transceiver):
                 writer.writerow([item_id, obj_name, epoch, entry["timestamp"]])
 
     # ------------------------------------------------------------------
-    # Message handler
+    # Message handlers
     # ------------------------------------------------------------------
+
+    def message_handler(self, message: dict, addr) -> None:
+        if message.get("type") == 1 and message.get("payload", {}).get("type") == _CRDT_TYPE:
+            payload   = message["payload"]
+            item_id   = payload["id"]
+            ts        = payload["timestamp"]
+            sender    = message["sender"]
+
+            with self._lock:
+                current = self._store.get(item_id)
+            local_ts  = current["timestamp"] if current else -1
+            local_src = current.get("source", "") if current else ""
+
+            if ts < local_ts:
+                self.write_log_debug(
+                    f"CRDT_OLD id={item_id} ts={ts}<{local_ts} — dropped", "SsaCrdtSat"
+                )
+                self.add_dmp_journal(message, addr[0])
+                raise Dumped()
+            elif ts == local_ts and local_src == sender:
+                self.write_log_debug(
+                    f"CRDT_DUP id={item_id} ts={ts} origin={sender} — dropped", "SsaCrdtSat"
+                )
+                self.add_dmp_journal(message, addr[0])
+                raise Dumped()
+            else:
+                self.add_rcv_journal(message, addr[0])
+                self._apply(item_id, payload["value"], ts, source=sender)
+                self.transmit(message, addr[0])
+        else:
+            super().message_handler(message, addr)
 
     def on_message(self, data: dict, addr: str) -> None:
         msg_type = data.get("type")
@@ -80,7 +113,7 @@ class SsaCrdtSat(Transceiver):
             self.write_log_debug(
                 f"Ground SSA uplink: id={item_id} ts={timestamp}", "SsaCrdtSat"
             )
-            self._apply(item_id, value, timestamp)
+            self._apply(item_id, value, timestamp, source=self.node_name)
             self.send_broadcast({
                 "type":      _CRDT_TYPE,
                 "id":        item_id,
@@ -88,9 +121,7 @@ class SsaCrdtSat(Transceiver):
                 "timestamp": timestamp,
             })
 
-        elif payload.get("type") == _CRDT_TYPE:
-            # ISL relay: Transceiver already forwarded it; just merge locally.
-            self._apply(payload["id"], payload["value"], payload["timestamp"])
+        # type=1 with lww_assign is fully handled in message_handler (apply + relay)
 
 
 algo = SsaCrdtSat()

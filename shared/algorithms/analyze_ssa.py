@@ -2,7 +2,7 @@
 """Analyze SSA dissemination test results and print a comparison table.
 
 Usage:
-    python3 analyze_ssa.py <control_dir> <crdt_dir> <tree_dir>
+    python3 analyze_ssa.py <control_dir> <crdt_dir> <tree_dir> [<concurrent_dir>]
 
 Each directory should be an archive created by:
     ./run_test.sh archive <name>
@@ -37,9 +37,9 @@ from collections import defaultdict
 # Message counting
 # ---------------------------------------------------------------------------
 
-def count_gnd_messages(directory: str) -> int:
+def count_gnd_messages(directory: str, log_glob: str = "gnd_ssa_*.log") -> int:
     count = 0
-    for path in glob.glob(os.path.join(directory, "gnd_ssa_*.log")):
+    for path in glob.glob(os.path.join(directory, log_glob)):
         with open(path) as f:
             for line in f:
                 parts = line.strip().split("|")
@@ -82,12 +82,16 @@ def load_catalog(path: str) -> dict[str, tuple]:
     return catalog
 
 
-def check_convergence(directory: str) -> tuple[int, int, list[str]]:
+def check_convergence(
+    directory: str, csv_prefix: str = "catalog_sat"
+) -> tuple[int, int, list[str]]:
     """Check that all satellite catalog CSVs agree.
 
     Returns (sats_with_csv, total_sats_expected, list_of_discrepancies).
+    csv_prefix selects which set of CSVs to check (e.g. "catalog_sat" for the
+    baseline tests, "catalog_conc_sat" for the concurrent tree test).
     """
-    csv_files = sorted(glob.glob(os.path.join(directory, "catalog_sat*.csv")))
+    csv_files = sorted(glob.glob(os.path.join(directory, f"{csv_prefix}*.csv")))
     if not csv_files:
         return 0, 0, ["no catalog CSVs found"]
 
@@ -126,10 +130,17 @@ def check_convergence(directory: str) -> tuple[int, int, list[str]]:
 # Main
 # ---------------------------------------------------------------------------
 
-cases: list[tuple[str, str]] = [
-    ("Control (direct uplink)", sys.argv[1] if len(sys.argv) > 1 else "shared/logs/control"),
-    ("CRDT Flood",              sys.argv[2] if len(sys.argv) > 2 else "shared/logs/crdt"),
-    ("CRDT Tree",               sys.argv[3] if len(sys.argv) > 3 else "shared/logs/tree"),
+# Each entry: (label, directory, gnd_log_glob, csv_prefix, is_tree)
+# is_tree controls whether the "(data only, excl. tree setup)" ISL row is printed.
+cases: list[tuple[str, str, str, str, bool]] = [
+    ("Control (direct uplink)", sys.argv[1] if len(sys.argv) > 1 else "shared/logs/control",
+     "gnd_ssa_*.log", "catalog_sat", False),
+    ("CRDT Flood",              sys.argv[2] if len(sys.argv) > 2 else "shared/logs/crdt",
+     "gnd_ssa_*.log", "catalog_sat", False),
+    ("CRDT Tree",               sys.argv[3] if len(sys.argv) > 3 else "shared/logs/tree",
+     "gnd_ssa_*.log", "catalog_sat", True),
+    ("CRDT Concurrent Tree",    sys.argv[4] if len(sys.argv) > 4 else "shared/logs/concurrent",
+     "gnd_concurrent_tree.log", "catalog_conc_sat", True),
 ]
 
 col_w = (30, 14, 14, 10)
@@ -146,7 +157,7 @@ print("=== Message counts ===")
 print(header)
 print(sep)
 
-for name, directory in cases:
+for name, directory, log_glob, csv_prefix, is_tree in cases:
     if not os.path.isdir(directory):
         print(
             f"{name:<{col_w[0]}}{'N/A':>{col_w[1]}}{'N/A':>{col_w[2]}}{'N/A':>{col_w[3]}}"
@@ -154,7 +165,7 @@ for name, directory in cases:
         )
         continue
 
-    gnd   = count_gnd_messages(directory)
+    gnd   = count_gnd_messages(directory, log_glob)
     isl   = count_isl_messages(directory)
     total = gnd + isl
 
@@ -162,7 +173,7 @@ for name, directory in cases:
         f"{name:<{col_w[0]}}{gnd:>{col_w[1]}}{isl:>{col_w[2]}}{total:>{col_w[3]}}"
     )
 
-    if "Tree" in name:
+    if is_tree:
         isl_data = count_isl_messages(directory, exclude_type8=True)
         label    = "(data only, excl. tree setup)"
         print(
@@ -178,11 +189,11 @@ print("ISL Messages : inter-satellite packets (SNT + TRA events in journal_sat*.
 print()
 print("=== Catalog convergence ===")
 
-for name, directory in cases:
+for name, directory, _log_glob, csv_prefix, _is_tree in cases:
     if not os.path.isdir(directory):
         continue
 
-    n_sats, n_items, discrepancies = check_convergence(directory)
+    n_sats, n_items, discrepancies = check_convergence(directory, csv_prefix)
     if n_sats == 0:
         print(f"  {name}: no catalog CSVs")
         continue
@@ -193,3 +204,92 @@ for name, directory in cases:
         print(d)
 
 print()
+
+
+# ---------------------------------------------------------------------------
+# Concurrent scalability table
+# ---------------------------------------------------------------------------
+
+def get_final_version(directory: str) -> str:
+    """Return the version string all sats converged to, or '?' if mixed."""
+    versions: set[str] = set()
+    for path in glob.glob(os.path.join(directory, "catalog_conc_sat*.csv")):
+        try:
+            with open(path, newline="") as f:
+                rows = list(csv.DictReader(f))
+                if rows:
+                    versions.add(rows[0]["version"])
+        except Exception:
+            pass
+    return versions.pop() if len(versions) == 1 else ("?" if not versions else "mixed")
+
+
+def print_concurrent_scalability(base_dir: str) -> None:
+    update_counts = [1, 5, 10, 20]
+    dirs = {n: os.path.join(base_dir, f"concurrent_{n}") for n in update_counts}
+
+    if not any(os.path.isdir(d) for d in dirs.values()):
+        return
+
+    print("=== Concurrent update scalability (CRDT Tree) ===")
+    print()
+
+    rows = []
+    baseline_isl: int | None = None
+
+    for n in update_counts:
+        d = dirs[n]
+        if not os.path.isdir(d):
+            rows.append((n, None, None, None, None, None))
+            continue
+
+        gnd     = count_gnd_messages(d, "gnd_concurrent_tree.log")
+        isl_d   = count_isl_messages(d, exclude_type8=True)
+        n_sats, _, disc = check_convergence(d, "catalog_conc_sat")
+        version = get_final_version(d)
+        conv    = f"OK ({n_sats} sats @ v{version})" if not disc else f"DIVERGED"
+
+        if baseline_isl is None:
+            baseline_isl = isl_d   # N=1 is the reference
+
+        rows.append((n, gnd, isl_d, conv))
+
+    cw = (9, 9, 15, 13, 13, 10)
+    hdr = (
+        f"{'Updates':>{cw[0]}}"
+        f"{'GS Msgs':>{cw[1]}}"
+        f"{'ISL Data Msgs':>{cw[2]}}"
+        f"{'Naive ISL':>{cw[3]}}"
+        f"{'ISL Saving':>{cw[4]}}"
+        f"  Convergence"
+    )
+    sep = "-" * (sum(cw) + 2)
+    print(hdr)
+    print(sep)
+
+    for row in rows:
+        n, gnd, isl_d, conv = row
+        if gnd is None:
+            print(f"{'N/A':>{cw[0]}}  (not found: {dirs[n]})")
+            continue
+        naive    = (baseline_isl or 0) * n
+        saving   = f"{100*(1 - isl_d/naive):.0f}%" if naive and n > 1 else "—"
+        print(
+            f"{n:>{cw[0]}}"
+            f"{gnd:>{cw[1]}}"
+            f"{isl_d:>{cw[2]}}"
+            f"{naive:>{cw[3]}}"
+            f"{saving:>{cw[4]}}"
+            f"  {conv}"
+        )
+
+    print(sep)
+    print()
+    print(f"ISL Data      : ISL messages excl. one-time spanning-tree setup (type=8).")
+    print(f"Naive ISL     : expected ISL if each update propagated independently (N × {baseline_isl}).")
+    print(f"ISL Saving    : reduction vs naive due to CRDT-aware deduplication.")
+    print()
+
+
+conc_base = sys.argv[5] if len(sys.argv) > 5 else "shared/logs"
+print_concurrent_scalability(conc_base)

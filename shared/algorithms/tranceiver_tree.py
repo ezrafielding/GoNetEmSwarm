@@ -61,6 +61,23 @@ class Tranceiver_with_mono_tree(Transceiver):
         }
         self.send_packets(message, self.neighbors_addr_dict[name])
 
+    def _forward_tree(self, message: dict, sender_ip: str) -> None:
+        """Relay a type=2 message along tree edges, skipping the interface it arrived on."""
+        while not self.tree_finished:
+            super().write_log_debug("waiting for tree before relay ...", "Basic_Tree_Mono")
+            time.sleep(2)
+        for node, link_ip in self.neighbors_addr_dict.items():
+            if sender_ip == link_ip:
+                super().write_log_debug("message not retransmited to: " + node, "Basic_Tree_Mono")
+            elif node == self.parent_ip:
+                self.send_packets(message, link_ip, True)
+                super().write_log_debug("message transmited to parent : " + node, "Basic_Tree_Mono")
+            elif node in self.childs_ip:
+                self.send_packets(message, link_ip, True)
+                super().write_log_debug("message transmited to child : " + node, "Basic_Tree_Mono")
+            else:
+                super().write_log_debug("message not retransmited to: " + node, "Basic_Tree_Mono")
+
     def send_tree_broadcast(self, payload: dict):
         super().write_log_debug("Sending broadcast", "Basic_Tree_Mono")
         while not self.tree_finished:
@@ -132,21 +149,7 @@ class Tranceiver_with_mono_tree(Transceiver):
 
             case 2: #More message efficient ,spanning tree based broadcast.
                 super().write_log_debug("Message instance received : Tree Based Broadcast, from : " + addr[0], "Basic_Tree_Mono")
-                while not self.tree_finished:
-                    super().write_log_debug("unable to send broadcast, tree isn't finished, waiting ...", "Basic_Tree_Mono")
-                    super().write_log_debug(str(len(self.indet_ip)) + " neighbors with unknown relation remaining", "Basic_Tree_Mono")
-                    time.sleep(2)
-                for node, link_ip in self.neighbors_addr_dict.items():
-                    if (addr[0] == link_ip):
-                        super().write_log_debug("message not retransmited to: "+ node, "Basic_Tree_Mono")
-                    elif (node == self.parent_ip):
-                        self.send_packets(message, link_ip, True)
-                        super().write_log_debug("message transmited to parent : "+ node, "Basic_Tree_Mono")
-                    elif (node in self.childs_ip):
-                        self.send_packets(message, link_ip, True)
-                        super().write_log_debug("message transmited to child : "+ node, "Basic_Tree_Mono")
-                    else:
-                        super().write_log_debug("message not retransmited to: "+ node, "Basic_Tree_Mono")
+                self._forward_tree(message, addr[0])
 
             case _:
                 super().write_log_debug("Message instance received : Unknown type, falling back on tranceiver.py", "Basic_Tree_Mono")
