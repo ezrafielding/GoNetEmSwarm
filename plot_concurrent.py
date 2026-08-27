@@ -107,7 +107,7 @@ for i, (isl, gnd) in enumerate(zip(actual_isl, actual_gnd)):
 ax.set_xticks(x)
 ax.set_xticklabels([f"{n}" for n in update_counts], fontsize=12)
 ax.set_xlabel("Number of concurrent updates", fontsize=12)
-ax.set_ylabel("Message count", fontsize=12)
+ax.set_ylabel("Message count (excl. tree construction)", fontsize=12)
 
 ax.yaxis.set_major_locator(mticker.MaxNLocator(integer=True))
 ax.yaxis.grid(True, linestyle="--", linewidth=0.6, alpha=0.7, zorder=0)
