@@ -77,19 +77,19 @@ uv run python generate_topology.py --from-graph iridium_graph.json --ground-stat
 
 This writes two files: the GoNetEm project `swarm_iridium_graph_66.gnet`, and `shared/algorithms/node_configs.json`, which the algorithms read at runtime. The `.gnet` file contains absolute paths, so generate it on the machine that will run the experiments.
 
-**5. Start the GoNetEm server in terminal A and leave it running.**
+**5. Start the GoNetEm server.** It runs in the foreground, so give it its own terminal and leave it running.
 
 ```bash
 sudo gonetem-server -conf-file ./config.yaml
 ```
 
-**6. Open the topology in terminal B.** Wait for the `[swarm_iridium_graph_66]>` prompt, then leave this terminal open. Type `quit` at the prompt when you are finished.
+**6. Open the topology in a second terminal.** Wait for the `[swarm_iridium_graph_66]>` prompt, then leave this terminal open. Type `quit` at the prompt when you are finished.
 
 ```bash
 gonetem-console open swarm_iridium_graph_66.gnet
 ```
 
-**7. Increase the link burst size in terminal C.** Run this once each time you open the topology:
+**7. Increase the link burst size.** Open a third terminal in the repository root; you'll also run the experiments from here. Run this command once each time you open the topology:
 
 ```bash
 ./run_test.sh isl-tune
@@ -99,7 +99,7 @@ gonetem-console open swarm_iridium_graph_66.gnet
 
 ## Running the experiments
 
-Run every test in terminal C, one at a time. Each test follows the same steps:
+Run every test from the third terminal you opened in step 7, one at a time. Each test follows the same steps:
 
 1. Stop any previous run and clear its logs.
 2. Start the test.
