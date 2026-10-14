@@ -1,9 +1,11 @@
 [project]
 name = "gonetemswarm"
 version = "0.1.0"
-description = "Add your description here"
+description = "Reproduction package for \"A Distributed Computing Framework for Satellite Swarms\" (STWiMob 2026): CRDT-based distributed state experiments on a GoNetEm-emulated 66-satellite constellation."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "matplotlib>=3.11.1",
+    "networkx>=3.7",
+    "pyyaml>=6.0.3",
 ]

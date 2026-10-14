@@ -1,0 +1,118 @@
+cff-version: 1.2.0
+title: >-
+  A Distributed Computing Framework for Satellite Swarms
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Ezra
+    family-names: Fielding
+    email: ezra.fielding@cnes.fr
+    affiliation: CNES, Toulouse, France
+    orcid: 'https://orcid.org/0000-0002-7936-0222'
+  - given-names: Clement
+    family-names: Demazure
+    email: clement.demazure@etu.toulouse-inp.fr
+    affiliation: Toulouse INP – IRIT, Toulouse, France
+  - given-names: Guthemberg
+    family-names: Silvestre
+    email: silvestre@enac.fr
+    affiliation: >-
+      Fédération ENAC ISAE-SUPAERO ONERA, Université de
+      Toulouse, France
+  - given-names: Felipe
+    family-names: Alves Suana
+    email: felipe.alvessuana@cnes.fr
+    affiliation: CNES, Toulouse, France
+  - given-names: Philippe
+    family-names: Queinnec
+    email: philippe.queinnec@irit.fr
+    affiliation: Toulouse INP – IRIT, Toulouse, France
+identifiers:
+  - type: doi
+    value: 10.48550/arXiv.2609.18839
+    description: The arXiv deposit of the paper.
+  - type: url
+    value: 'https://arxiv.org/abs/2609.18839'
+    description: The arXiv abstract page.
+repository-code: 'https://github.com/ezrafielding/GoNetEmSwarm'
+abstract: >-
+  The rise of large satellite constellations and
+  Distributed Space Systems (DSS) demands generalized
+  frameworks that enable fault-tolerant, autonomous
+  distributed space applications. Conventional
+  ground-centric command and control does not scale to
+  systems of tens or hundreds of satellites, motivating the
+  adoption of distributed computing. This paper introduces
+  a conceptual distributed computing framework for
+  satellite swarms, covering distributed state, command and
+  control, and scientific mission. As a first validation
+  step, a strongly eventually consistent distributed state
+  service is designed and implemented using Conflict-free
+  Replicated Data Types (CRDT), specifically a
+  Last-Write-Wins Register-based key-value store. The
+  service is evaluated in the context of Space Situational
+  Awareness catalog dissemination across a simulated
+  66-satellite constellation emulated with GoNetEm. Results
+  show that the CRDT-based approach reduces
+  ground-to-satellite communication from 66 messages to a
+  single uplink per update, with tree traversal matching
+  the total message count of direct uplink. Under
+  concurrent updates, sub-linear inter-satellite message
+  growth is observed as nodes discard outdated versions,
+  further reducing network overhead. These results
+  demonstrate the viability of a CRDT-based distributed
+  state as a scalable and fault-tolerant foundation for
+  satellite swarm applications.
+keywords:
+  - Distributed Space Systems
+  - Distributed Computing
+  - Conflict-free Replicated Data Types
+license: MIT
+date-released: '2026-10-14'
+preferred-citation:
+  type: conference-paper
+  authors:
+    - given-names: Ezra
+      family-names: Fielding
+      email: ezra.fielding@cnes.fr
+      affiliation: CNES, Toulouse, France
+      orcid: 'https://orcid.org/0000-0002-7936-0222'
+    - given-names: Clement
+      family-names: Demazure
+      email: clement.demazure@etu.toulouse-inp.fr
+      affiliation: Toulouse INP – IRIT, Toulouse, France
+    - given-names: Guthemberg
+      family-names: Silvestre
+      email: silvestre@enac.fr
+      affiliation: >-
+        Fédération ENAC ISAE-SUPAERO ONERA, Université de
+        Toulouse, France
+    - given-names: Felipe
+      family-names: Alves Suana
+      email: felipe.alvessuana@cnes.fr
+      affiliation: CNES, Toulouse, France
+    - given-names: Philippe
+      family-names: Queinnec
+      email: philippe.queinnec@irit.fr
+      affiliation: Toulouse INP – IRIT, Toulouse, France
+  title: A Distributed Computing Framework for Satellite Swarms
+  collection-title: >-
+    Nineteen International Workshop on Selected Topics in
+    Mobile and Wireless Computing - 2026 (STWiMob'2026)
+  collection-type: proceedings
+  conference:
+    name: >-
+      Nineteen International Workshop on Selected Topics in
+      Mobile and Wireless Computing - 2026 (STWiMob'2026)
+    city: Avignon
+    country: FR
+    date-start: '2026-10-14'
+  keywords:
+    - Distributed Space Systems
+    - Distributed Computing
+    - Conflict-free Replicated Data Types
+  month: 10
+  year: 2026
+  url: 'https://arxiv.org/abs/2609.18839'
