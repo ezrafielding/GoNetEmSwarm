@@ -83,13 +83,19 @@ This writes two files: the GoNetEm project `swarm_iridium_graph_66.gnet`, and `s
 sudo gonetem-server -conf-file ./config.yaml
 ```
 
-**6. Open the topology in a second terminal.** Wait for the `[swarm_iridium_graph_66]>` prompt, then leave this terminal open. Type `quit` at the prompt when you are finished.
+**6. Pull GoNetEm's Docker images.** Open a second terminal in the repository root and run this command. The server must be running. You only need to do this the first time you use GoNetEm.
+
+```bash
+gonetem-console pull
+```
+
+**7. Open the topology.** Run this in the second terminal, wait for the `[swarm_iridium_graph_66]>` prompt, then leave the terminal open. Type `quit` at the prompt when you are finished.
 
 ```bash
 gonetem-console open swarm_iridium_graph_66.gnet
 ```
 
-**7. Increase the link burst size.** Open a third terminal in the repository root; you'll also run the experiments from here. Run this command once each time you open the topology:
+**8. Increase the link burst size.** Open a third terminal in the repository root; you'll also run the experiments from here. Run this command once each time you open the topology:
 
 ```bash
 ./run_test.sh isl-tune
@@ -99,7 +105,7 @@ gonetem-console open swarm_iridium_graph_66.gnet
 
 ## Running the experiments
 
-Run every test from the third terminal you opened in step 7, one at a time. Each test follows the same steps:
+Run every test from the third terminal you opened in step 8, one at a time. Each test follows the same steps:
 
 1. Stop any previous run and clear its logs.
 2. Start the test.
