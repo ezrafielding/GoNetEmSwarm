@@ -1,7 +1,6 @@
 # A Distributed Computing Framework for Satellite Swarms
 
-[![GitHub License](https://img.shields.io/github/license/ezrafielding/GoNetEmSwarm)
-](https://github.com/ezrafielding/GoNetEmSwarm/blob/main/LICENSE) [![arXiv](https://img.shields.io/badge/arXiv-2609.18839-b31b1b.svg)](https://arxiv.org/abs/2609.18839)
+[![GitHub License](https://img.shields.io/github/license/ezrafielding/GoNetEmSwarm)](https://github.com/ezrafielding/GoNetEmSwarm/blob/main/LICENSE) [![arXiv](https://img.shields.io/badge/arXiv-2609.18839-b31b1b.svg)](https://arxiv.org/abs/2609.18839)
 
 This repository contains the code for reproducing the experiments in [*A Distributed Computing Framework for Satellite Swarms*](https://arxiv.org/abs/2609.18839) (STWiMob'2026).
 
