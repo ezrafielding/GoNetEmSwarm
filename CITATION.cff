@@ -73,7 +73,8 @@ keywords:
   - Distributed Computing
   - Conflict-free Replicated Data Types
 license: MIT
-date-released: '2026-10-14'
+version: 1.0.0
+date-released: '2026-11-18'
 preferred-citation:
   type: conference-paper
   authors:
@@ -112,8 +113,8 @@ preferred-citation:
   end: 103
   conference:
     name: >-
-      Nineteen International Workshop on Selected Topics in
-      Mobile and Wireless Computing - 2026 (STWiMob'2026)
+      2026 22nd International Conference on Wireless and
+      Mobile Computing, Networking and Communications (WiMob)
     city: Avignon
     country: FR
     date-start: '2026-10-14'
