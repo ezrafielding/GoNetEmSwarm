@@ -1,8 +1,8 @@
 # A Distributed Computing Framework for Satellite Swarms
 
-[![GitHub License](https://img.shields.io/github/license/ezrafielding/GoNetEmSwarm)](https://github.com/ezrafielding/GoNetEmSwarm/blob/main/LICENSE) [![arXiv](https://img.shields.io/badge/arXiv-2609.18839-b31b1b.svg)](https://arxiv.org/abs/2609.18839)
+[![GitHub License](https://img.shields.io/github/license/ezrafielding/GoNetEmSwarm)](https://github.com/ezrafielding/GoNetEmSwarm/blob/main/LICENSE) [![DOI](https://img.shields.io/badge/DOI-10.1109%2FWiMob70978.2026.11777913-blue.svg)](https://doi.org/10.1109/WiMob70978.2026.11777913) [![arXiv](https://img.shields.io/badge/arXiv-2609.18839-b31b1b.svg)](https://arxiv.org/abs/2609.18839)
 
-This repository contains the code for reproducing the experiments in [*A Distributed Computing Framework for Satellite Swarms*](https://arxiv.org/abs/2609.18839) (STWiMob'2026).
+This repository contains the code for reproducing the experiments in [*A Distributed Computing Framework for Satellite Swarms*](https://doi.org/10.1109/WiMob70978.2026.11777913), presented at STWiMob'2026 and published in the proceedings of IEEE WiMob 2026. A preprint is available on [arXiv](https://arxiv.org/abs/2609.18839).
 
 ## Abstract
 
@@ -10,19 +10,18 @@ The rise of large satellite constellations and Distributed Space Systems (DSS) d
 
 ## Citation
 
-E. Fielding, C. Demazure, G. Silvestre, F. Alves Suana and P. Queinnec, "A Distributed Computing Framework for Satellite Swarms," in *Nineteen International Workshop on Selected Topics in Mobile and Wireless Computing - 2026 (STWiMob'2026)*, Avignon, France, Oct. 2026.
+E. Fielding, C. Demazure, G. Silvestre, F. Alves Suana and P. Queinnec, "A Distributed Computing Framework for Satellite Swarms," in *2026 22nd International Conference on Wireless and Mobile Computing, Networking and Communications (WiMob)*, Avignon, France, 2026, pp. 98-103, doi: [10.1109/WiMob70978.2026.11777913](https://doi.org/10.1109/WiMob70978.2026.11777913).
 
 ```bibtex
-@INPROCEEDINGS{Fiel2610:Distributed,
-  AUTHOR    = "Ezra Fielding and Clement Demazure and Guthemberg Silvestre and Felipe {Alves Suana} and Philippe Queinnec",
-  TITLE     = "A Distributed Computing Framework for Satellite Swarms",
-  BOOKTITLE = "Nineteen International Workshop on Selected Topics in Mobile and Wireless Computing - 2026 (STWiMob'2026)",
-  ADDRESS   = "Avignon, France",
-  DAYS      = 14,
-  MONTH     = oct,
-  YEAR      = 2026,
-  KEYWORDS  = "Distributed Space Systems; Distributed Computing; Conflict-free Replicated Data Types"
-}
+@INPROCEEDINGS{11777913,
+  author={Fielding, Ezra and Demazure, Clement and Silvestre, Guthemberg and {Alves Suana}, Felipe and Queinnec, Philippe},
+  booktitle={2026 22nd International Conference on Wireless and Mobile Computing, Networking and Communications (WiMob)}, 
+  title={A Distributed Computing Framework for Satellite Swarms}, 
+  year={2026},
+  volume={},
+  number={},
+  pages={98-103},
+  doi={10.1109/WiMob70978.2026.11777913}}
 ```
 
 ## Data
