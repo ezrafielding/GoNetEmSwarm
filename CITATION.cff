@@ -31,6 +31,9 @@ authors:
     affiliation: Toulouse INP – IRIT, Toulouse, France
 identifiers:
   - type: doi
+    value: 10.1109/WiMob70978.2026.11777913
+    description: The IEEE Xplore version of the paper.
+  - type: doi
     value: 10.48550/arXiv.2609.18839
     description: The arXiv deposit of the paper.
   - type: url
@@ -99,9 +102,14 @@ preferred-citation:
       affiliation: Toulouse INP – IRIT, Toulouse, France
   title: A Distributed Computing Framework for Satellite Swarms
   collection-title: >-
-    Nineteen International Workshop on Selected Topics in
-    Mobile and Wireless Computing - 2026 (STWiMob'2026)
+    2026 22nd International Conference on Wireless and
+    Mobile Computing, Networking and Communications (WiMob)
   collection-type: proceedings
+  publisher:
+    name: IEEE
+  doi: 10.1109/WiMob70978.2026.11777913
+  start: 98
+  end: 103
   conference:
     name: >-
       Nineteen International Workshop on Selected Topics in
@@ -115,4 +123,4 @@ preferred-citation:
     - Conflict-free Replicated Data Types
   month: 10
   year: 2026
-  url: 'https://arxiv.org/abs/2609.18839'
+  url: 'https://doi.org/10.1109/WiMob70978.2026.11777913'
